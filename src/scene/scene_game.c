@@ -7,6 +7,9 @@
 #include "../pokajan_core/cards.h"
 #include "../sound/sound.h"
 
+#define TABLE_BLEND (Color){ 0, 0, 0, 64 }
+#define GEN_MAX_WIDTH 360
+
 typedef struct {
 	Scene base;
 
@@ -30,31 +33,40 @@ static void GameInit(void *self) {
 
 static void GameUpdate(void *self) {
 	GameScene *s = (GameScene *)self;
-	if (s->cardSpacing != 90) s->cardSpacing += 5;
+	if (s->cardSpacing < GEN_MAX_WIDTH) s->cardSpacing += 20;
 }
 
 static void GameRender(void *self) {
 	GameScene *s = (GameScene *)self;
 	ClearBackground(DARKGREEN);
+
+	DrawRectangleRoundedLinesEx((Rectangle){ 210, 225, 1500, 550 }, 0.2, 30, 10, TABLE_BLEND);
 	int slot = 0;
-
 	for (slot = 0; slot < 2; slot++) {
-		for (int mem = 0; mem < GENERATION_MEMBER_COUNT[s->genArray[slot]]; mem++) {
-			CardDrawRaw(slot, mem, V_DISPLAY, 260 + mem * s->cardSpacing, 275 + slot * 240, 0.6);
+		int memCount = GENERATION_MEMBER_COUNT[s->genArray[slot]];
+		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
+		for (int mem = 0; mem < memCount; mem++) {
+			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 275 + slot * 240, 0.6);
 		}
 	}
 
+	
 	for (slot = 0; slot < 2; slot++) {
-		for (int mem = 0; mem < GENERATION_MEMBER_COUNT[s->genArray[slot + 2]]; mem++) {
-			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + mem * s->cardSpacing, 275 + slot * 240, 0.6);
+		int memCount = GENERATION_MEMBER_COUNT[s->genArray[slot + 2]];
+		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
+		for (int mem = 0; mem < memCount; mem++) {
+			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 275 + slot * 240, 0.6);
 		}
 	}
+		
 
-	if (s->cardSpacing == 90) HUDDrawGenIndicators(s->genArray);
+	if (s->cardSpacing >= GEN_MAX_WIDTH) HUDDrawGenIndicators(s->genArray);
 
 	CardDraw(s->bonus, 1440, 345, 0.9);
-	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 300 }, 70, WHITE);
-	DrawFocusText("BONUS", (Vector2){ 1455, 680 }, 70, WHITE);
+	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 300 }, 70, TABLE_BLEND);
+	DrawFocusText("BONUS", (Vector2){ 1455, 680 }, 70, TABLE_BLEND);
+
+	
 }
 
 static void GameDestroy(void *self) {

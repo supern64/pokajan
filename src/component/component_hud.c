@@ -72,12 +72,12 @@ void HUDDrawGenIndicators(Generation generations[4]) {
     int slot = 0;
     for (slot = 0; slot < 2; slot++) {
         HUDDrawGenIndicator(generations[slot], 240, 290 + slot * 240, 1.0, 0.0);
-        HUDDrawGenIndicator(generations[slot], 300 + GENERATION_MEMBER_COUNT[generations[slot]] * 100, 480 + slot * 240, 1.0, 180.0);
+        HUDDrawGenIndicator(generations[slot], (GENERATION_MEMBER_COUNT[generations[slot]] == 4 ? 760 : 800), 480 + slot * 240, 1.0, 180.0);
 	}
 
 	for (slot = 0; slot < 2; slot++) {
 		HUDDrawGenIndicator(generations[slot+2], 840, 290 + slot * 240, 1.0, 0.0);
-        HUDDrawGenIndicator(generations[slot+2], 900 + GENERATION_MEMBER_COUNT[generations[slot+2]] * 100, 480 + slot * 240, 1.0, 180.0);
+        HUDDrawGenIndicator(generations[slot+2], (GENERATION_MEMBER_COUNT[generations[slot+2]] == 4 ? 1360 : 1400), 480 + slot * 240, 1.0, 180.0);
 	}
 }
 

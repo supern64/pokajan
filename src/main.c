@@ -1,7 +1,7 @@
 #include <raylib.h>
 #include "scene/scene.h"
 #include "scene/scene_manager.h"
-#include "scene/scene_game.h"
+#include "scene/scene_title.h"
 #include "utils/text.h"
 #include "sound/sound.h"
 
@@ -11,7 +11,7 @@ int main(void) {
 	SoundLoadBGM();
 
 	LoadFonts();
-	SceneManagerInit(GameCreate());
+	SceneManagerInit(TitleCreate());
 
 	SetTargetFPS(60);
 
