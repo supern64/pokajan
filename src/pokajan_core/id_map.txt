@@ -1,0 +1,79 @@
+00xx (JP)
+01 Sora
+02 Roboco
+03 -- Mel
+04 Aki
+05 Haachama
+06 Fubuki
+07 Matsuri
+08 -- Aqua
+09 -- Shion
+10 Ayame
+11 Choco
+12 Subaru
+13 AZKi
+14 Mio
+15 Miko
+16 Okayu
+17 Korone
+18 Suisei
+19 Pekora
+20 -- Rushia
+21 Flare
+22 Noel
+23 Marine
+24 -- Kanata
+25 -- Coco
+26 Watame
+27 Towa
+28 Luna
+29 -- ?
+30 Lamy
+31 Nene
+32 Botan
+33 -- Aloe
+34 Polka
+35 La+
+36 Lui
+37 Koyori
+38 -- Chloe
+39 Iroha
+
+30xx (ID)
+01 Risu
+02 Moona
+03 Iofi
+04 Ollie
+05 Anya
+06 Reine
+07 Zeta
+08 Kaela
+09 Kobo
+
+40xx (EN)
+01 Calli
+02 Kiara
+03 Ina
+04 -- Gura
+05 -- Ame
+06 -- ?
+07 IRyS
+08 -- Sana
+09 -- Fauna
+10 Kronii
+11 -- Mumei
+12 Bae
+13 Shiori
+14 Bijou
+15 Nerissa
+16 Fuwawa
+17 Mococo
+80001 FUWAMOCO
+
+60xx (DEV_IS)
+01 -- Ao
+02 Kanade
+03 Ririka
+04 Raden
+05 Hajime
+
