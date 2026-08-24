@@ -8,7 +8,7 @@ set PATH=%COMPILER_PATH%;%PATH%
 set CC=gcc
 set CFLAGS=-s -static -O3 -std=c99 -Wall -Wshadow -Wunused-parameter -I%RAYLIB_PATH%\src -Iexternal -DPLATFORM_DESKTOP -L.
 set LDFLAGS=-lraylib -lopengl32 -lgdi32 -lwinmm -lshcore
-set SOURCE_FILES=src\main.c src\component\component_card.c src\component\component_hud.c src\sound\sound.c src\pokajan_core\cards.c src\scene\scene_title.c src\scene\scene_game.c src\scene\scene_manager.c src\utils\text.c src\utils\input.c
+set SOURCE_FILES=src\main.c src\component\component_card.c src\component\component_hud.c src\sound\sound.c src\pokajan_core\cards.c src\pokajan_core\pokajan.c src\scene\scene_title.c src\scene\scene_game.c src\scene\scene_manager.c src\utils\text.c src\utils\input.c
  
 if /I "%ACTION%"=="run" goto :run
  

@@ -21,10 +21,13 @@ typedef enum {
 typedef int GenerationEntry[5];
 
 typedef struct {
-	int id;
+	int id;						// -1 indicates an empty card
 	Generation generation;
 	Variant variant;
 } Card;
+
+#define EMPTY_CARD (Card){ .id = -1, .generation = -1, .variant = V_UNCOLORED }
+#define IS_CARD_EMPTY(card_) card_.id == -1
 
 // -1 indicates an empty slot.
 static const GenerationEntry GENERATIONS[15] = {

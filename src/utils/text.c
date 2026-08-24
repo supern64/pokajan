@@ -30,7 +30,6 @@ void DrawFocusTextUpsideDown(const char *text, Vector2 position, float fontSize,
     DrawTextPro(FocusFont, text, (Vector2){ position.x, position.y - size.y/2 }, size, 180.0, fontSize, 1.0, tint);
 }
 
-
 void DrawMainText(const char *text, Vector2 position, float fontSize, Color tint) {
     DrawTextEx(MainFont, text, position, fontSize, 1.0, tint);
 }
@@ -38,4 +37,12 @@ void DrawMainText(const char *text, Vector2 position, float fontSize, Color tint
 void DrawMainTextCenter(const char *text, int posY, float fontSize, Color tint) {
     Vector2 size = MeasureTextEx(MainFont, text, fontSize, 1.0);
     DrawTextEx(MainFont, text, (Vector2){ SCREEN_WIDTH / 2 - (size.x / 2), posY }, fontSize, 1.0, tint);
+}
+
+Font* GetMainFont() {
+    return &MainFont;
+}
+
+Font* GetFocusFont() {
+    return &FocusFont;
 }

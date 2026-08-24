@@ -5,6 +5,7 @@
 #include "../component/component_card.h"
 #include "../component/component_hud.h"
 #include "../pokajan_core/cards.h"
+#include "../pokajan_core/pokajan.h"
 #include "../sound/sound.h"
 
 #define TABLE_BLEND (Color){ 0, 0, 0, 64 }
@@ -12,9 +13,7 @@
 
 typedef struct {
 	Scene base;
-
-	Generation genArray[4];
-	Card bonus;
+	Game game;
 
 	int cardSpacing;
 } GameScene;
@@ -24,9 +23,8 @@ static void GameInit(void *self) {
 	s->cardSpacing = 0;
 
 	HUDLoad();
-	GetRandomGenerations(s->genArray);
-	s->bonus = GetRandomBonusCard(s->genArray);
-	CardLoad(s->genArray);
+	PokajanInit(&s->game);
+	CardLoad(s->game.generations);
 
 	SoundPlayBGM();
 }
@@ -43,7 +41,7 @@ static void GameRender(void *self) {
 	DrawRectangleRoundedLinesEx((Rectangle){ 210, 225, 1500, 550 }, 0.2, 30, 10, TABLE_BLEND);
 	int slot = 0;
 	for (slot = 0; slot < 2; slot++) {
-		int memCount = GENERATION_MEMBER_COUNT[s->genArray[slot]];
+		int memCount = GENERATION_MEMBER_COUNT[s->game.generations[slot]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
 			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 275 + slot * 240, 0.6);
@@ -52,7 +50,7 @@ static void GameRender(void *self) {
 
 	
 	for (slot = 0; slot < 2; slot++) {
-		int memCount = GENERATION_MEMBER_COUNT[s->genArray[slot + 2]];
+		int memCount = GENERATION_MEMBER_COUNT[s->game.generations[slot + 2]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
 			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 275 + slot * 240, 0.6);
@@ -60,13 +58,13 @@ static void GameRender(void *self) {
 	}
 		
 
-	if (s->cardSpacing >= GEN_MAX_WIDTH) HUDDrawGenIndicators(s->genArray);
+	if (s->cardSpacing >= GEN_MAX_WIDTH) HUDDrawGenIndicators(s->game.generations);
 
-	CardDraw(s->bonus, 1440, 345, 0.9);
+	CardDraw(s->game.bonusCard, 1440, 345, 0.9);
 	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 300 }, 70, TABLE_BLEND);
 	DrawFocusText("BONUS", (Vector2){ 1455, 680 }, 70, TABLE_BLEND);
 
-	
+	HUDDrawPlayers(s->game.players);
 }
 
 static void GameDestroy(void *self) {
