@@ -1,7 +1,6 @@
 #include "text.h"
 #include <raylib.h>
-
-#define SCREEN_WIDTH 1920
+#include "misc.h"
 
 Font FocusFont;
 Font MainFont;
@@ -36,7 +35,7 @@ void DrawMainText(const char *text, Vector2 position, float fontSize, Color tint
 
 void DrawMainTextCenter(const char *text, int posY, float fontSize, Color tint) {
     Vector2 size = MeasureTextEx(MainFont, text, fontSize, 1.0);
-    DrawTextEx(MainFont, text, (Vector2){ SCREEN_WIDTH / 2 - (size.x / 2), posY }, fontSize, 1.0, tint);
+    DrawTextEx(MainFont, text, (Vector2){ SCREEN_W / 2 - (size.x / 2), posY }, fontSize, 1.0, tint);
 }
 
 Font* GetMainFont() {

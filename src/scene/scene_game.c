@@ -7,15 +7,15 @@
 #include "../pokajan_core/cards.h"
 #include "../pokajan_core/pokajan.h"
 #include "../sound/sound.h"
+#include "../utils/misc.h"
 
-#define TABLE_BLEND (Color){ 0, 0, 0, 64 }
 #define GEN_MAX_WIDTH 360
 
 typedef struct {
 	Scene base;
 	Game game;
 
-	int cardSpacing;
+	float cardSpacing;
 } GameScene;
 
 static void GameInit(void *self) {
@@ -38,13 +38,14 @@ static void GameRender(void *self) {
 	GameScene *s = (GameScene *)self;
 	ClearBackground(DARKGREEN);
 
-	DrawRectangleRoundedLinesEx((Rectangle){ 210, 225, 1500, 550 }, 0.2, 30, 10, TABLE_BLEND);
+	// card on bottom
+	DrawRectangleRoundedLinesEx((Rectangle){ 210, 260, 1500, 550 }, 0.2, 30, 10, TABLE_BLEND);
 	int slot = 0;
 	for (slot = 0; slot < 2; slot++) {
 		int memCount = GENERATION_MEMBER_COUNT[s->game.generations[slot]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
-			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 275 + slot * 240, 0.6);
+			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 310 + slot * 240, 0.6);
 		}
 	}
 
@@ -53,18 +54,22 @@ static void GameRender(void *self) {
 		int memCount = GENERATION_MEMBER_COUNT[s->game.generations[slot + 2]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
-			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 275 + slot * 240, 0.6);
+			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 310 + slot * 240, 0.6);
 		}
 	}
 		
 
 	if (s->cardSpacing >= GEN_MAX_WIDTH) HUDDrawGenIndicators(s->game.generations);
 
-	CardDraw(s->game.bonusCard, 1440, 345, 0.9);
-	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 300 }, 70, TABLE_BLEND);
-	DrawFocusText("BONUS", (Vector2){ 1455, 680 }, 70, TABLE_BLEND);
+	CardDraw(s->game.bonusCard, 1440, 380, 0.9);
+	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 335 }, 70, TABLE_BLEND);
+	DrawFocusText("BONUS", (Vector2){ 1455, 715 }, 70, TABLE_BLEND);
 
-	HUDDrawPlayers(s->game.players);
+	// player info on top
+	HUDDrawPlayers(s->game.players, s->game.turnIndex);
+
+	// then pokajan anim
+	HUDDrawPokajanAnim();
 }
 
 static void GameDestroy(void *self) {
