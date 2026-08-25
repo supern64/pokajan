@@ -31,7 +31,7 @@ void SceneManagerPush(Scene *next) {
     pendingScene = next;
 }
 
-void sceneManagerPop(void) {
+void SceneManagerPop(void) {
     pendingOp = PENDING_POP;
 }
 

@@ -1,6 +1,8 @@
 #include "scene_game.h"
 #include <raylib.h>
 #include <stdlib.h>
+#include "scene_manager.h"
+#include "overlay_card_instructions.h"
 #include "../utils/text.h"
 #include "../component/component_card.h"
 #include "../component/component_hud.h"
@@ -28,6 +30,9 @@ static void GameInit(void *self) {
 	CardLoad(s->game.generations);
 
 	SoundPlayBGM();
+
+	// display card instructions
+	SceneManagerPush(CardInstructionsCreate(s->game.generations));
 }
 
 static void GameUpdate(void *self) {
@@ -92,7 +97,6 @@ static void GameDestroy(void *self) {
 }
 
 static const SceneVTable GameVTable = {
-	.init = GameInit,
 	.update = GameUpdate,
 	.render = GameRender,
 	.destroy = GameDestroy

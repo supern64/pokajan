@@ -146,7 +146,6 @@ static void TitleDestroy(void *self) {
 }
 
 static const SceneVTable titleVTable = {
-	.init = TitleInit,
 	.update = TitleUpdate,
 	.render = TitleRender,
 	.destroy = TitleDestroy
