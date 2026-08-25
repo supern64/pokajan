@@ -6,7 +6,7 @@ Font FocusFont;
 Font MainFont;
 
 void LoadFonts(void) {
-    FocusFont = LoadFontEx("assets/fonts/LineSeedSans_A_XBd.ttf", 128, 0, 0);
+    FocusFont = LoadFontEx("assets/fonts/LINESeedSans_A_XBd.ttf", 128, 0, 0);
     GenTextureMipmaps(&FocusFont.texture);
     SetTextureFilter(FocusFont.texture, TEXTURE_FILTER_BILINEAR);
 
