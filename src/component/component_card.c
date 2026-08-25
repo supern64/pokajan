@@ -1,6 +1,7 @@
 #include "component_card.h"
 #include <raylib.h>
 #include <stdio.h>
+#include "../utils/misc.h"
 
 static Texture2D CardAtlas[4];
 static Generation SlotMapping[15] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -77,7 +78,7 @@ void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float sc
     int texY = memIndex * 363;
     Rectangle atlasLocation = { texX, texY, 256, 363 };
     Rectangle finalLocation = { x, y, 256 * scale, 363 * scale };
-    DrawTexturePro(CardAtlas[slot], atlasLocation, finalLocation, (Vector2){ 0, 0 }, 0.0, WHITE);
+    DrawTexturePro(CardAtlas[slot], atlasLocation, finalLocation, ANCHOR_7, 0.0, WHITE);
 }
 
 void CardDraw(Card card, int x, int y, float scale) {

@@ -4,6 +4,7 @@
 #include <rlgl.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include "../utils/text.h"
 #include "../utils/misc.h"
 
@@ -71,7 +72,7 @@ void HUDDrawGenIndicator(Generation generation, int x, int y, float scale, float
         GameAtlas,
         atlasLocation,
         (Rectangle){ x, y, atlasLocation.width * scale, atlasLocation.height * scale },
-        (Vector2){ 0, 0 },
+        ANCHOR_7,
         rotation,
         WHITE
     );
@@ -97,7 +98,7 @@ static void HUDDrawCoin(int x, int y, float scale, float rotation) {
         GameAtlas,
         (Rectangle){ 1, 1, 202, 200 },
         (Rectangle){ x, y, 202 * scale, 200 * scale },
-        (Vector2){ 0, 0 },
+        ANCHOR_7,
         rotation,
         WHITE
     );
@@ -109,7 +110,7 @@ static void HUDDrawCoinNumber(int coins, int x, int y, float rotation) {
     char coinText[5];
     snprintf(coinText, 5, "%d", coins);
     Vector2 size = MeasureTextEx(*GetFocusFont(), coinText, 50, 1.0);
-    DrawTextPro(*GetFocusFont(), coinText, (Vector2){ x, y }, (Vector2){ size.x, size.y / 2 }, rotation, 50, 1.0, WHITE);
+    DrawTextPro(*GetFocusFont(), coinText, (Vector2){ x, y }, ANCHOR_6(size.x, size.y, 1), rotation, 50, 1.0, WHITE);
 }
 
 // 0 - 1st place, 3 - 4th place
@@ -134,7 +135,7 @@ static void HUDDrawPlace(int place, int x, int y, float scale, float rotation) {
         GameAtlas,
         atlasLocation,
         (Rectangle){ x, y, atlasLocation.width * scale, atlasLocation.height * scale },
-        (Vector2){ 0, 0 },
+        ANCHOR_7,
         rotation,
         WHITE
     );
@@ -205,8 +206,7 @@ static void HUDDrawPlayerWidget(Vector2 circleCenter, const char* label, float r
     HUDDrawRectangleRoundedRotated((Rectangle){ rc.x, rc.y, 300, 100 }, 1.5f, 30, rotation, TABLE_BLEND);
 
     Vector2 textSize = MeasureTextEx(*GetFocusFont(), label, 70, 1.0);
-    DrawTextPro(*GetFocusFont(), label, circleCenter,
-                (Vector2){ textSize.x / 2, textSize.y / 2 }, rotation, 70, 1.0, WHITE);
+    DrawTextPro(*GetFocusFont(), label, circleCenter, ANCHOR_5(textSize.x, textSize.y, 1), rotation, 70, 1.0, WHITE);
 
     HUDDrawCoin(cc.x, cc.y, 0.2f, rotation);
     HUDDrawCoinNumber(coins, nc.x, nc.y, rotation);
@@ -230,7 +230,7 @@ void HUDDrawPlayers(Player players[4], int turnIndex) {
 
 // pokajan! animation
 
-static int activePokajanAnim = 3;
+static int activePokajanAnim = -1;
 static float pokajanAnimTimer = 0;
 static int pokajanAnimPhase = 0;
 
@@ -239,33 +239,48 @@ static void HUDDrawPokajanLogo(int x, int y, float scale, float rotation) {
         GameAtlas,
         (Rectangle){ 1, 203, 1355, 661 },
         (Rectangle){ x, y, 1355 * scale, 661 * scale },
-        (Vector2){ 677.5 * scale, 330.5 * scale },
+        ANCHOR_5(1355, 661, scale),
         rotation,
         WHITE
     );
 }
 
 void HUDInitPokajanAnim(int playerIndex) {
-
+    activePokajanAnim = playerIndex;
+    pokajanAnimPhase = 1;
+    pokajanAnimTimer = 0;
 }
 
 void HUDUpdatePokajanAnim(void) {
+    if (activePokajanAnim == -1) return;
+    pokajanAnimTimer += pokajanAnimPhase;
+    
+    if (pokajanAnimTimer == 100) {
+        pokajanAnimPhase = -8;
+    } else if (pokajanAnimPhase != 1 && pokajanAnimTimer <= 0) {
+        pokajanAnimPhase = 0;
+        pokajanAnimTimer = 0;
+        activePokajanAnim = -1;
+    }
 }
 
 void HUDDrawPokajanAnim(void) {
     switch (activePokajanAnim) {
         case 0:
-            DrawRectangleGradientV(0, 270, 1920, 810, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 255 });
+            DrawRectangleGradientV(0, 270, 1920, 810, BLANK, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) });
+            HUDDrawPokajanLogo(960, 1170 - (350 * log(pokajanAnimTimer + 1) / LN_70), 0.5f, 180.0f);
             break;
         case 2:
-            DrawRectangleGradientV(0, 0, 1920, 810, (Color){ 0, 0, 0, 255 }, (Color){ 0, 0, 0, 0 });
+            DrawRectangleGradientV(0, 0, 1920, 810, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) }, BLANK);
+            HUDDrawPokajanLogo(960, (350 * log(pokajanAnimTimer + 1) / LN_70) - 90, 0.5f, 0.0f);
             break;
         case 1:
-            DrawRectangleGradientH(0, 0, 1440, 1080, (Color){ 0, 0, 0, 255 }, (Color){ 0, 0, 0, 0 });
+            DrawRectangleGradientH(0, 0, 1440, 1080, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) }, BLANK);
+            HUDDrawPokajanLogo((350 * log(pokajanAnimTimer + 1) / LN_70) - 90, 540, 0.5f, 270.0f);
             break;
         case 3:
-            DrawRectangleGradientH(480, 0, 1440, 1080, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 255 });
-            HUDDrawPokajanLogo(1536, 540, 0.5f, 90.0f);
+            DrawRectangleGradientH(480, 0, 1440, 1080, BLANK, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) });
+            HUDDrawPokajanLogo(2010 - (350 * log(pokajanAnimTimer + 1) / LN_70), 540, 0.5f, 90.0f);
             break;
         default:
             return;

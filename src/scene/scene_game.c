@@ -8,6 +8,7 @@
 #include "../pokajan_core/pokajan.h"
 #include "../sound/sound.h"
 #include "../utils/misc.h"
+#include "../utils/input.h"
 
 #define GEN_MAX_WIDTH 360
 
@@ -32,6 +33,18 @@ static void GameInit(void *self) {
 static void GameUpdate(void *self) {
 	GameScene *s = (GameScene *)self;
 	if (s->cardSpacing < GEN_MAX_WIDTH) s->cardSpacing += 20;
+	HUDUpdatePokajanAnim();
+
+	uint8_t p = GetPokajanPressed();
+	if (p & P1) {
+		HUDInitPokajanAnim(0);
+	} else if (p & P2) {
+		HUDInitPokajanAnim(1);
+	} else if (p & P3) {
+		HUDInitPokajanAnim(2);
+	} else if (p & P4) {
+		HUDInitPokajanAnim(3);
+	}
 }
 
 static void GameRender(void *self) {
