@@ -83,14 +83,14 @@ void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float sc
 
 void CardDraw(Card card, int x, int y, float scale) {
     if (SlotMapping[card.generation] == -1) {
-        printf("Attempted to render unloaded generation %d", card.generation);
+        printf("Attempted to render unloaded generation %d\n", card.generation);
         return;
     }
     int memIndex = 0;
     while (card.id != GENERATIONS[card.generation][memIndex]) {
         memIndex++;
         if (memIndex >= GENERATION_MEMBER_COUNT[card.generation]) {
-            printf("Attempted to render invalid member %d of gen %d", card.id, card.generation);
+            printf("Attempted to render invalid member %d of gen %d\n", card.id, card.generation);
             return;
         }
     }
