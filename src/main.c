@@ -2,7 +2,9 @@
 #include "scene/scene.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_title.h"
+#include "scene/scene_game.h"
 #include "utils/text.h"
+#include "utils/misc.h"
 #include "sound/sound.h"
 
 int main(void) {
@@ -11,7 +13,11 @@ int main(void) {
 	SoundLoadBGM();
 
 	LoadFonts();
-	SceneManagerInit(TitleCreate());
+	#ifdef F_SKIP_TO_GAME
+		SceneManagerInit(GameCreate());
+	#else
+		SceneManagerInit(TitleCreate());
+	#endif
 
 	SetTargetFPS(60);
 
