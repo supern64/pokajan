@@ -19,8 +19,11 @@ static void CardInstructionsInit(void *self, Generation generations[4]) {
 	s->generations = generations;
 }
 
+static void CardInstructionsStart(void *self) {
+	(void)self;
+}
+
 static void CardInstructionsUpdate(void *self) {
-	CardInstructionsOverlay *s = (CardInstructionsOverlay *)self;
 	if (GetPokajanPressed()) SceneManagerPop();
 }
 
@@ -49,10 +52,10 @@ static void CardInstructionsRender(void *self) {
 		allGenMemSum += GENERATION_MEMBER_COUNT[s->generations[i]];
 	}
 
-	char step3[58];
+	char step3[67];
 	snprintf(
 		step3,
-		58,
+		67,
 		"3. After that, take out %d cards to make a 100-card deck.",
 		(allGenMemSum * 3 * 3) - 100
 	);
@@ -68,6 +71,7 @@ static void CardInstructionsDestroy(void *self) {
 }
 
 static const SceneVTable cardInstVTable = {
+	.start = CardInstructionsStart,
 	.update = CardInstructionsUpdate,
 	.render = CardInstructionsRender,
 	.destroy = CardInstructionsDestroy

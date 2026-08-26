@@ -3,6 +3,8 @@
 
 void SoundLoadBGM(void);
 void SoundPlayBGM(void);
+void SoundSetBGMVolume(float volume);
+void SoundStopBGM(void);
 void SoundUnloadBGM(void);
 
 #endif

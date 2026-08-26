@@ -50,6 +50,14 @@ void SoundPlayBGM(void) {
     PlayAudioStream(BGMAudioStream);
 }
 
+void SoundSetBGMVolume(float volume) {
+    SetAudioStreamVolume(BGMAudioStream, volume);
+}
+
+void SoundStopBGM(void) {
+    StopAudioStream(BGMAudioStream);
+}
+
 void SoundUnloadBGM(void) {
     UnloadAudioStream(BGMAudioStream);
     UnloadWaveSamples(BGMSamples);

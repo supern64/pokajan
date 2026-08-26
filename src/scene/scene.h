@@ -2,6 +2,7 @@
 #define SCENE_H
 
 typedef struct {
+    void (*start)(void *self);
     void (*update)(void *self);
     void (*render)(void *self);
     void (*destroy)(void *self);

@@ -28,10 +28,11 @@ static void GameInit(void *self) {
 	HUDLoad();
 	PokajanInit(&s->game);
 	CardLoad(s->game.generations);
+}
 
+static void GameStart(void *self) {
+	GameScene *s = (GameScene *)self;
 	SoundPlayBGM();
-
-	// display card instructions
 	SceneManagerPush(CardInstructionsCreate(s->game.generations));
 }
 
@@ -39,17 +40,6 @@ static void GameUpdate(void *self) {
 	GameScene *s = (GameScene *)self;
 	if (s->cardSpacing < GEN_MAX_WIDTH) s->cardSpacing += 20;
 	HUDUpdatePokajanAnim();
-
-	uint8_t p = GetPokajanPressed();
-	if (p & P1) {
-		HUDInitPokajanAnim(0);
-	} else if (p & P2) {
-		HUDInitPokajanAnim(1);
-	} else if (p & P3) {
-		HUDInitPokajanAnim(2);
-	} else if (p & P4) {
-		HUDInitPokajanAnim(3);
-	}
 }
 
 static void GameRender(void *self) {
@@ -91,12 +81,14 @@ static void GameRender(void *self) {
 }
 
 static void GameDestroy(void *self) {
+	SoundStopBGM();
 	CardUnload();
 	HUDUnload();
 	free(self);
 }
 
 static const SceneVTable GameVTable = {
+	.start = GameStart,
 	.update = GameUpdate,
 	.render = GameRender,
 	.destroy = GameDestroy

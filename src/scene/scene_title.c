@@ -44,6 +44,10 @@ static void TitleInit(void *self) {
 	PokajanShadeLogo = LoadTexture("assets/misc/pokajan_text_hz_outline.png");
 }
 
+static void TitleStart(void *self) {
+	(void)self;
+}
+
 static void TitleUpdate(void *self) {
 	TitleScene *s = (TitleScene *)self;
 	switch (s->fade) {
@@ -146,6 +150,7 @@ static void TitleDestroy(void *self) {
 }
 
 static const SceneVTable titleVTable = {
+	.start = TitleStart,
 	.update = TitleUpdate,
 	.render = TitleRender,
 	.destroy = TitleDestroy
