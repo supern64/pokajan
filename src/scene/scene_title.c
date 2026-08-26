@@ -115,7 +115,7 @@ static void TitleRender(void *self) {
 	switch (t->phase) {
 		case 0:
 			ClearBackground(BLACK);
-			DrawMainTextCenter("Please rotate the screen\nso the arrow points towards player #1.", 400, 70, FADE_WHITE);
+			DrawMainTextCenter("Please rotate the screen\nso the arrow points towards player #1.", 350, 70, FADE_WHITE);
 
 			DrawRectangle(900, 600, 120, 200, FADE_WHITE);
 			DrawTriangle((Vector2){ 840, 800 }, (Vector2){ 960, 950 }, (Vector2){ 1080, 800 }, FADE_WHITE);
