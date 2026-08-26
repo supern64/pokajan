@@ -231,7 +231,8 @@ void HUDDrawPlayers(Player players[4], int turnIndex) {
 // pokajan! animation
 
 static int activePokajanAnim = -1;
-static float pokajanAnimTimer = 0;
+static int pokajanAnimTimer = 0;
+static int pokajanWaveTimer = 0;
 static int pokajanAnimPhase = 0;
 
 static void HUDDrawPokajanLogo(int x, int y, float scale, float rotation) {
@@ -249,38 +250,74 @@ void HUDInitPokajanAnim(int playerIndex) {
     activePokajanAnim = playerIndex;
     pokajanAnimPhase = 1;
     pokajanAnimTimer = 0;
+    pokajanWaveTimer = 0;
 }
 
 void HUDUpdatePokajanAnim(void) {
     if (activePokajanAnim == -1) return;
     pokajanAnimTimer += pokajanAnimPhase;
+    pokajanWaveTimer += 1; 
     
+    if (pokajanWaveTimer >= 300) {
+        pokajanWaveTimer = 0;
+    }
+
     if (pokajanAnimTimer == 100) {
         pokajanAnimPhase = -8;
     } else if (pokajanAnimPhase != 1 && pokajanAnimTimer <= 0) {
         pokajanAnimPhase = 0;
         pokajanAnimTimer = 0;
+        pokajanWaveTimer = 0;
         activePokajanAnim = -1;
     }
 }
 
 void HUDDrawPokajanAnim(void) {
+    float offset = (350 * log(pokajanAnimTimer + 1) / LN_70);
+    int i;
     switch (activePokajanAnim) {
         case 0:
             DrawRectangleGradientV(0, 270, 1920, 810, BLANK, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) });
-            HUDDrawPokajanLogo(960, 1170 - (350 * log(pokajanAnimTimer + 1) / LN_70), 0.5f, 180.0f);
+            for (i = 0; i < 12; i++) {
+                DrawEllipse(i * 300 - pokajanWaveTimer * 4, 1280 - offset / 1.5, 200, 100, POKAJAN_DARK_BLUE);
+            }
+            for (i = 0; i < 12; i++) {
+                DrawEllipse((i - 2) * 300 + pokajanWaveTimer * 4, 1280 - offset / 2, 200, 100, POKAJAN_LIGHT_BLUE);
+            }
+
+            HUDDrawPokajanLogo(960, 1170 - offset, 0.5f, 180.0f);
             break;
         case 2:
             DrawRectangleGradientV(0, 0, 1920, 810, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) }, BLANK);
-            HUDDrawPokajanLogo(960, (350 * log(pokajanAnimTimer + 1) / LN_70) - 90, 0.5f, 0.0f);
+            
+            for (i = 0; i < 12; i++) {
+                DrawEllipse(i * 300 - pokajanWaveTimer * 4, offset / 1.5 - 200, 200, 100, POKAJAN_DARK_BLUE);
+            }
+            for (i = 0; i < 12; i++) {
+                DrawEllipse((i - 2) * 300 + pokajanWaveTimer * 4, offset / 2 - 200, 200, 100, POKAJAN_LIGHT_BLUE);
+            }
+            
+            HUDDrawPokajanLogo(960, offset - 90, 0.5f, 0.0f);
             break;
         case 1:
             DrawRectangleGradientH(0, 0, 1440, 1080, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) }, BLANK);
-            HUDDrawPokajanLogo((350 * log(pokajanAnimTimer + 1) / LN_70) - 90, 540, 0.5f, 270.0f);
+            for (i = 0; i < 7; i++) {
+                DrawEllipse(offset / 1.5 - 200, i * 300 - pokajanWaveTimer * 4, 100, 200, POKAJAN_DARK_BLUE);
+            }
+            for (i = 0; i < 7; i++) {
+                DrawEllipse(offset / 2 - 200, (i - 2) * 300 + pokajanWaveTimer * 4, 100, 200, POKAJAN_LIGHT_BLUE);
+            }
+            HUDDrawPokajanLogo(offset - 90, 540, 0.5f, 270.0f);
             break;
         case 3:
             DrawRectangleGradientH(480, 0, 1440, 1080, BLANK, (Color){ 0, 0, 0, fmin(pokajanAnimTimer * 8, 255) });
-            HUDDrawPokajanLogo(2010 - (350 * log(pokajanAnimTimer + 1) / LN_70), 540, 0.5f, 90.0f);
+            for (i = 0; i < 7; i++) {
+                DrawEllipse(2120 - offset / 1.5, i * 300 - pokajanWaveTimer * 4, 100, 200, POKAJAN_DARK_BLUE);
+            }
+            for (i = 0; i < 7; i++) {
+                DrawEllipse(2120 - offset / 2, (i - 2) * 300 + pokajanWaveTimer * 4, 100, 200, POKAJAN_LIGHT_BLUE);
+            }
+            HUDDrawPokajanLogo(2010 - offset, 540, 0.5f, 90.0f);
             break;
         default:
             return;
