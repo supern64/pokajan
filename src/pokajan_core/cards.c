@@ -18,6 +18,7 @@ void GetRandomGenerations(Generation generations[4]) {
         if ((toPick == GEN_1 && selectedGen[GAMERS]) || (toPick == GAMERS && selectedGen[GEN_1])) continue;
 
         int membersInGen = GENERATION_MEMBER_COUNT[toPick];
+        if (currentMemberCount >= 15 && membersInGen != 3) continue;
         if (currentMemberCount > 10 && membersInGen == 5) continue;
         if (currentMemberCount < 8 && membersInGen == 3) continue;
         
