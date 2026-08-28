@@ -25,7 +25,7 @@ int main(void) {
 		SceneManagerUpdate();
 
 		BeginDrawing();
-		SceneManagerRender();
+			SceneManagerRender();
 		EndDrawing();
 	}
 

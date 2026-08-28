@@ -9,8 +9,9 @@
 #define SCREEN_H 1080
 #define LN_70 4.24
 
-#define F_SKIP_TO_GAME 1
-#define F_DEBUG 1
+// flags
+#define F_SKIP_TO_GAME
+#define F_DEBUG
 
 // anchor macros, refer to numpad
 
