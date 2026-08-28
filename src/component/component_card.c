@@ -82,6 +82,7 @@ void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float sc
 }
 
 void CardDraw(Card card, int x, int y, float scale) {
+    if (card.id == -1) return; // don't attempt to render empty card
     if (SlotMapping[card.generation] == -1) {
         printf("Attempted to render unloaded generation %d\n", card.generation);
         return;
