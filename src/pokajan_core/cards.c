@@ -2,35 +2,32 @@
 #include <raylib.h>
 #include <stdio.h>
 
-// Gets 4 random valid generations for a Pokajan! game.
-void GetRandomGenerations(Generation generations[4]) {
-    int selectedGen[15] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    int currentMemberCount = 0;
+void PokajanGetRandomGenerations(Generation generations[4]) {
+    while (1) {
+        int selectedGen[15] = { 0 };
+        int totalMembers = 0;
+        int count = 0;
 
-    int i = 0;
-    while (i < 4) {
-        int toPick = GetRandomValue(0, 14);
+        while (count < 4) {
+            int toPick = GetRandomValue(0, 14);
+            if (!selectedGen[toPick]) {
+                selectedGen[toPick] = 1;
+                generations[count++] = toPick;
+                totalMembers += GENERATION_MEMBER_COUNT[toPick];
+            }
+        }
 
-        // must be unique
-        if (selectedGen[toPick]) continue;
+        // Rule 1: GEN_1 and GAMERS cannot be together
+        if (selectedGen[GEN_1] && selectedGen[GAMERS]) continue;
 
-        // JP1 and GAMERS cannot be together
-        if ((toPick == GEN_1 && selectedGen[GAMERS]) || (toPick == GAMERS && selectedGen[GEN_1])) continue;
-
-        int membersInGen = GENERATION_MEMBER_COUNT[toPick];
-        if (currentMemberCount >= 15 && membersInGen != 3) continue;
-        if (currentMemberCount > 10 && membersInGen == 5) continue;
-        if (currentMemberCount < 8 && membersInGen == 3) continue;
-        
-        currentMemberCount += membersInGen;
-        selectedGen[toPick] = 1;
-        generations[i] = toPick;
-        i++;
+        // Rule 2: Total members must be between 15 and 17
+        if (totalMembers >= 15 && totalMembers <= 17) {
+            break; // Valid combination
+        }
     }
 }
 
-// Gets a random bonus card from a set of generations.
-Card GetRandomBonusCard(Generation generations[4]) {
+Card PokajanGetRandomBonusCard(Generation generations[4]) {
     int pickGen = generations[GetRandomValue(0, 3)];
     int pickMem = GENERATIONS[pickGen][GetRandomValue(0, GENERATION_MEMBER_COUNT[pickGen] - 1)];
 
@@ -39,4 +36,27 @@ Card GetRandomBonusCard(Generation generations[4]) {
         .generation = pickGen,
         .variant = V_UNCOLORED
     };
+}
+
+bool PokajanIsAllSameColor(Card *cards, int count) {
+    Card compare = EMPTY_CARD;
+    for (int i = 0; i < count; i++) {
+        if (IS_EMPTY_CARD(cards[i])) continue;
+        if (IS_EMPTY_CARD(compare)) {
+            compare = cards[i];
+            continue;
+        }
+
+        if (!IS_SAME_CARD(compare, cards[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int PokajanGetMemberSlot(Generation generation, int id) {
+    for (int i = 0; i < GENERATION_MEMBER_COUNT[generation]; i++) {
+        if (GENERATIONS[generation][i] == id) return i;
+    }
+    return -1;
 }

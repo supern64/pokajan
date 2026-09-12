@@ -1,6 +1,8 @@
 #ifndef CARDS_H
 #define CARDS_H
 
+#include <stdbool.h>
+
 typedef enum {
 	GEN_0, GEN_1, GEN_2, GAMERS, GEN_3, GEN_4, GEN_5, HOLOX,
 	MYTH, PROMISE, ADVENT,
@@ -27,7 +29,9 @@ typedef struct {
 } Card;
 
 #define EMPTY_CARD (Card){ .id = -1, .generation = -1, .variant = V_UNCOLORED }
-#define IS_CARD_EMPTY(card_) card_.id == -1
+#define IS_EMPTY_CARD(card_) ((card_).id == -1)
+#define IS_SAME_CARD(a_, b_) ((a_).id == (b_).id && (a_).generation == (b_).generation && (a_).variant == (b_).variant)
+#define IS_SAME_MEMBER(a_, b_) ((a_).id == (b_).id && (a_).generation == (b_).generation)
 
 // -1 indicates an empty slot.
 static const GenerationEntry GENERATIONS[15] = {
@@ -54,10 +58,15 @@ static const GenerationEntry GENERATIONS[15] = {
 static const int GENERATION_MEMBER_COUNT[15] = { 5, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 3, 3, 3, 5 };
 
 // Gets 4 random valid generations for a Pokajan! game.
-void GetRandomGenerations(Generation generations[4]);
+void PokajanGetRandomGenerations(Generation generations[4]);
 
 // Gets a random bonus card from a set of generations.
-Card GetRandomBonusCard(Generation generations[4]);
+Card PokajanGetRandomBonusCard(Generation generations[4]);
 
+// Checks if a set of cards all have the same color. Empty cards ignored.
+bool PokajanIsAllSameColor(Card *cards, int count);
+
+// Gets the index of a member of a generation from their ID. Returns -1 if member is not part of generation.
+int PokajanGetMemberSlot(Generation generation, int id);
 #endif
 

@@ -4,6 +4,8 @@
 #include "cards.h"
 #include <stdbool.h>
 
+#define POKAJAN_MAX_MATCHES 96
+
 typedef enum {
     THREE_OF_A_KIND,
     FULL_GENERATION
@@ -38,37 +40,37 @@ typedef struct {
     int turnIndex;
     int cards;
 
-    bool matchInProgress;
-    int matchClaimant; // invalid (-1) if matchInProgress is false
-    int drawsRemaining;
+    Match lastMatch; // empty match if no claims are being made
+    bool matchDiscard[5];
 
     bool discardClaimable;
     bool contestInProgress; // whether a contest is in progress
     Match contestMatch[3]; // the contested matches
     int contestants; // number of contestants
 
-    bool endPending;
     bool ended;
 } Game;
+
+#define EMPTY_MATCH (Match){ -1, THREE_OF_A_KIND, DIFFERENT, { EMPTY_CARD, EMPTY_CARD, EMPTY_CARD, EMPTY_CARD, EMPTY_CARD }, 0, false, -1 }
+#define IS_EMPTY_MATCH(a_) ((a_).playerIndex == -1)
 
 void PokajanInit(Game *game);
 bool PokajanSetInitialHand(Game *game, int playerIndex, Card hand[7]);
 
 bool PokajanDraw(Game *game, int playerIndex, Card card);
-bool PokajanDiscardOnTurn(Game *game, int playerIndex, Card card);
+bool PokajanDiscardOnTurn(Game *game, int playerIndex, int from);
 
-int PokajanCheckMatches(Game *game, int playerIndex, Match matches[20]);
-bool PokajanCommitSelfMatch(Game *game, Match match);
-bool PokajanDiscardAfterMatch(Game *game, int playerIndex, Card card);
-bool PokajanReplenish(Game *game, int playerIndex, Card card, int slot);
+int PokajanCheckMatches(Game *game, int playerIndex, Match matches[POKAJAN_MAX_MATCHES]);
+bool PokajanCommitSelfMatch(Game *game, int playerIndex, Match match);
+bool PokajanDiscardAfterMatch(Game *game, int playerIndex, int from);
+bool PokajanReplenish(Game *game, int playerIndex, Card card, int to);
 void PokajanEndMatchSequence(Game *game);
 
 bool PokajanDeclareContestOnDiscardMatch(Game *game, int playerIndex, Match match);
 bool PokajanResolveContestAndCommitDiscardMatch(Game *game, Match *outWinner);
 
-bool PokajanWillEnd(Game *game);
-bool PokajanIsEnded(Game *game);
 void PokajanEnd(Game *game);
 int PokajanGetWinners(Game *game, int outWinners[4]);
 
+int PokajanGetGenerationSlot(Game *game, Generation generation);
 #endif
