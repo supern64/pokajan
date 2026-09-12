@@ -30,7 +30,7 @@ void PokajanInit(Game *game) {
 }
 
 bool PokajanSetInitialHand(Game *game, int playerIndex, Card hand[7]) {
-    if (game->ended || game->cards != 100) return false;
+    if (game->ended) return false;
     // invalid if the players do not have all empty cards
     for (int i = 0; i < 7; i++) {
         if (!IS_EMPTY_CARD(game->players[playerIndex].hand[i])) return false;
@@ -611,7 +611,7 @@ bool PokajanCommitSelfMatch(Game *game, int playerIndex, Match match) {
     } else {
         // all cards from last match must be discarded first
         int i = 0;
-        while (!IS_EMPTY_CARD(game->lastMatch.matchInHand[i])) {
+        while (i < 5 && !IS_EMPTY_CARD(game->lastMatch.matchInHand[i])) {
             if (!game->matchDiscard[i]) return false;
             i++;
         }
@@ -644,7 +644,7 @@ bool PokajanDiscardAfterMatch(Game *game, int playerIndex, int from) {
 
     int i = 0;
     bool found = false;
-    while (!IS_EMPTY_CARD(game->lastMatch.matchInHand[i])) {
+    while (i < 5 && !IS_EMPTY_CARD(game->lastMatch.matchInHand[i])) {
         if (IS_SAME_CARD(*target, game->lastMatch.matchInHand[i]) && !game->matchDiscard[i]) {
             found = true;
             game->matchDiscard[i] = true;
@@ -674,7 +674,7 @@ bool PokajanReplenish(Game *game, int playerIndex, Card card, int to) {
     if (!IS_EMPTY_CARD(game->players[playerIndex].hand[to])) return false;
     // requires you discard all cards from your last match first
     int i = 0;
-    while (!IS_EMPTY_CARD(game->lastMatch.matchInHand[i])) {
+    while (i < 5 && !IS_EMPTY_CARD(game->lastMatch.matchInHand[i])) {
         if (!game->matchDiscard[i]) return false;
         i++;
     }
