@@ -30,10 +30,11 @@ void PokajanInit(Game *game) {
 }
 
 bool PokajanSetInitialHand(Game *game, int playerIndex, Card hand[7]) {
-    if (game->ended) return false;
-    // invalid if the players do not have all empty cards
+    if (game->ended || playerIndex < 0 || playerIndex > 3) return false;
+    // invalid if the players do not have all empty cards or if the card set isn't all filled
     for (int i = 0; i < 7; i++) {
         if (!IS_EMPTY_CARD(game->players[playerIndex].hand[i])) return false;
+        if (IS_EMPTY_CARD(hand[i])) return false;
     }
     for (int i = 0; i < 7; i++) {
         game->players[playerIndex].hand[i] = hand[i];
@@ -61,10 +62,10 @@ bool PokajanDiscardOnTurn(Game *game, int playerIndex, int from) {
     if (game->ended) return false;
     if (game->turnIndex != playerIndex) return false; // it says it right there. discard ON TURN
     if (from > 7 || from < 0) return false;
+    if (IS_EMPTY_CARD(game->players[playerIndex].drawnSlot)) return false;
 
     // make sure card exists
-    Card target = from == 7 ? game->players[playerIndex].drawnSlot : game->players[playerIndex].hand[from];
-    if (IS_EMPTY_CARD(target)) return false;
+    if (from != 7 && IS_EMPTY_CARD(game->players[playerIndex].hand[from])) return false;
 
     // move card from drawn slot into main slot if drawn slot isn't the one discarded
     if (from != 7) {
@@ -246,7 +247,7 @@ int PokajanCheckMatches(Game *game, int playerIndex, Match matches[POKAJAN_MAX_M
                         match.matchInHand[0] = ownCombo[0];
                         match.matchInHand[1] = ownCombo[1]; // borrowed 3rd lives in useDiscardOf
                         match.complete = true;
-                        match.colorState = PokajanIsAllSameColor(combined, 3) ? SAME : DIFFERENT;
+                        match.colorState = PokajanIsAllSameCard(combined, 3) ? SAME : DIFFERENT;
                         int baseReward = (match.colorState == SAME) ? 840 : 120;
                         match.reward = baseReward + PokajanComputeBonus(game, combined, 3);
                         matches[matchCount++] = match;
@@ -473,7 +474,7 @@ static bool PokajanValidateMatch(Game *game, int playerIndex, Match match) {
     if (match.playerIndex != playerIndex) return false;
 
     for (int i = 0; i < 5; i++) {
-        if (!IS_EMPTY_CARD(match.matchInHand[i]) && match.matchInHand[i].variant > V_ORANGE) return false;
+        if (!IS_EMPTY_CARD(match.matchInHand[i]) && (match.matchInHand[i].variant > V_ORANGE || match.matchInHand[i].variant < 0)) return false;
     }
 
     // repr's generation must actually be one of the 4 active generations -
@@ -602,6 +603,7 @@ static bool PokajanValidateMatch(Game *game, int playerIndex, Match match) {
 
 bool PokajanCommitSelfMatch(Game *game, int playerIndex, Match match) {
     if (game->ended) return false;
+    if (match.useDiscardOf != -1) return false;
     // someone already claiming, so reject everyone else
     if (!IS_EMPTY_MATCH(game->lastMatch) && game->lastMatch.playerIndex != playerIndex) return false;
 
@@ -729,7 +731,7 @@ bool PokajanResolveContestAndCommitDiscardMatch(Game *game, Match *outWinner) {
 
         for (int i = 1; i < game->contestants; i++) {
             int key = order[i];
-            int keyReward = biasReward[i];
+            int keyReward = biasReward[key];
             int j = i - 1;
             while (j >= 0 && biasReward[order[j]] < keyReward) {
                 order[j + 1] = order[j];
@@ -746,6 +748,7 @@ bool PokajanResolveContestAndCommitDiscardMatch(Game *game, Match *outWinner) {
     game->contestInProgress = false;
     for (int i = 0; i < 3; i++) game->contestMatch[i] = EMPTY_MATCH;
     game->contestants = 0;
+    game->discardClaimable = false;
 
     // setup chain
     game->lastMatch = *outWinner;

@@ -38,7 +38,7 @@ Card PokajanGetRandomBonusCard(Generation generations[4]) {
     };
 }
 
-bool PokajanIsAllSameColor(Card *cards, int count) {
+bool PokajanIsAllSameCard(Card *cards, int count) {
     Card compare = EMPTY_CARD;
     for (int i = 0; i < count; i++) {
         if (IS_EMPTY_CARD(cards[i])) continue;
@@ -55,6 +55,7 @@ bool PokajanIsAllSameColor(Card *cards, int count) {
 }
 
 int PokajanGetMemberSlot(Generation generation, int id) {
+    if (id == -1) return -1;
     for (int i = 0; i < GENERATION_MEMBER_COUNT[generation]; i++) {
         if (GENERATIONS[generation][i] == id) return i;
     }

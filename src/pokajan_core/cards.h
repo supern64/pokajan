@@ -63,8 +63,8 @@ void PokajanGetRandomGenerations(Generation generations[4]);
 // Gets a random bonus card from a set of generations.
 Card PokajanGetRandomBonusCard(Generation generations[4]);
 
-// Checks if a set of cards all have the same color. Empty cards ignored.
-bool PokajanIsAllSameColor(Card *cards, int count);
+// Checks if a set of cards all have the same member and color. Empty cards ignored.
+bool PokajanIsAllSameCard(Card *cards, int count);
 
 // Gets the index of a member of a generation from their ID. Returns -1 if member is not part of generation.
 int PokajanGetMemberSlot(Generation generation, int id);
