@@ -1,5 +1,4 @@
 #include <raylib.h>
-#include "scene/scene.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_title.h"
 #include "scene/scene_game.h"

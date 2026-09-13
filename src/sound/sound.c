@@ -1,6 +1,5 @@
 #include "sound.h"
 #include <raylib.h>
-#include <stdio.h>
 
 #define BGM_LOOP_START 9.75
 #define BGM_LOOP_END 113.25
