@@ -47,5 +47,7 @@ Card BridgeResolveCard(NfcId id);
 
 void BridgeInitTable(PokajanTable *table);
 
+void BridgePostGameState(PokajanTable *table);
+
 void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online);
 #endif

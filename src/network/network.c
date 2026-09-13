@@ -61,6 +61,9 @@ static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode
     };
     
     mosquitto_subscribe_multiple(MosqInstance, NULL, 6, subTopics, 2, 0, NULL);
+
+    // broadcast initial game information
+    BridgePostGameState((PokajanTable*)table);
 }
 
 static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct mosquitto_message *msg) {

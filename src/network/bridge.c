@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <mosquitto.h>
+#include <raylib.h>
 
 static CardTable CTable;
 static int loadedCount = 0;
@@ -71,6 +72,24 @@ void BridgeInitTable(PokajanTable *table) {
             .discardSlot = EMPTY_CARD_ID
         };
     }
+}
+
+void BridgePostGameState(PokajanTable *table) {
+    for (int i = 0; i < 4; i++) {
+        char nCoins[5];
+        snprintf(nCoins, 5, "%d", table->game.players[i].coins);
+        mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/coins", i), strlen(nCoins), nCoins, 1, true);
+    }
+
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/current_turn", 2, TextFormat("%d", table->game.turnIndex), 1, true);
+
+    char genList[12];
+    snprintf(genList, 12, "%hhu,%hhu,%hhu,%hhu", table->game.generations[0], table->game.generations[1], table->game.generations[2], table->game.generations[3]);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/generations", strlen(genList), genList, 1, true);
+
+    char nDeckCount[4];
+    snprintf(nDeckCount, 4, "%d", table->game.cards);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/deck_count", strlen(nDeckCount), nDeckCount, 1, true);
 }
 
 void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online) {
