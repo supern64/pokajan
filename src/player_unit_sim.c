@@ -1,12 +1,14 @@
 #include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
 #include <raygui.h>
+#include <mosquitto.h>
 
 #include "component/component_card.h"
 
 static Font MainFont;
 
 typedef struct {
+    bool online;
     Card hand[7];
     Card draw;
     Card discard;
@@ -32,6 +34,8 @@ static PlayerUnit units[4];
 static const int ledX[9] = { 144, 280, 416, 552, 688, 824, 960, 1136, 1312 };
 
 int main() {
+    mosquitto_lib_init();
+
     InitWindow(1608, 1032, "Player Unit Simulator");
     SetTargetFPS(60);
 
@@ -56,12 +60,15 @@ int main() {
     }
 
     CloseWindow();
+
+    mosquitto_lib_cleanup();
     return 0;
 }
 
 static void InitPlayerUnitInfo(void) {
     for (int i = 0; i < 4; i++) {
         units[i] = (PlayerUnit){
+            .online = false,
             .coins = 1000,
             .hand = { EMPTY_CARD, EMPTY_CARD, EMPTY_CARD, EMPTY_CARD, EMPTY_CARD, EMPTY_CARD, EMPTY_CARD },
             .discard = EMPTY_CARD,
@@ -112,7 +119,6 @@ static void DrawPlayerUnits(void)
         for (int i = 0; i < 9; i++) {
             CardDrawRaw(0, 0, 0, ledX[i] - 48, rowY + 24, 0.5);
         }
-
 
         // draw LEDs (7 hand + draw + discard)
         for (int i = 0; i < 7; i++) {
