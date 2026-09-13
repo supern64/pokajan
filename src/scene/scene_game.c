@@ -8,6 +8,7 @@
 #include "../component/component_hud.h"
 #include "../pokajan_core/cards.h"
 #include "../pokajan_core/pokajan.h"
+#include "../network/bridge.h"
 #include "../sound/sound.h"
 #include "../utils/misc.h"
 #include "../utils/input.h"
@@ -16,7 +17,7 @@
 
 typedef struct {
 	Scene base;
-	Game game;
+	PokajanTable* table;
 
 	float cardSpacing;
 } GameScene;
@@ -26,14 +27,13 @@ static void GameInit(void *self) {
 	s->cardSpacing = 0;
 
 	HUDLoad();
-	PokajanInit(&s->game);
-	CardLoad(s->game.generations);
+	CardLoad(s->table->game.generations);
 }
 
 static void GameStart(void *self) {
 	GameScene *s = (GameScene *)self;
 	SoundPlayBGM();
-	SceneManagerPush(CardInstructionsCreate(s->game.generations));
+	SceneManagerPush(CardInstructionsCreate(s->table->game.generations));
 }
 
 static void GameUpdate(void *self) {
@@ -63,7 +63,7 @@ static void GameRender(void *self) {
 	DrawRectangleRoundedLinesEx((Rectangle){ 210, 260, 1500, 550 }, 0.2, 30, 10, TABLE_BLEND);
 	int slot = 0;
 	for (slot = 0; slot < 2; slot++) {
-		int memCount = GENERATION_MEMBER_COUNT[s->game.generations[slot]];
+		int memCount = GENERATION_MEMBER_COUNT[s->table->game.generations[slot]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
 			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 310 + slot * 240, 0.6);
@@ -72,7 +72,7 @@ static void GameRender(void *self) {
 
 	
 	for (slot = 0; slot < 2; slot++) {
-		int memCount = GENERATION_MEMBER_COUNT[s->game.generations[slot + 2]];
+		int memCount = GENERATION_MEMBER_COUNT[s->table->game.generations[slot + 2]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
 			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 310 + slot * 240, 0.6);
@@ -80,14 +80,14 @@ static void GameRender(void *self) {
 	}
 		
 
-	if (s->cardSpacing >= GEN_MAX_WIDTH) HUDDrawGenIndicators(s->game.generations);
+	if (s->cardSpacing >= GEN_MAX_WIDTH) HUDDrawGenIndicators(s->table->game.generations);
 
-	CardDraw(s->game.bonusCard, 1440, 380, 0.9);
+	CardDraw(s->table->game.bonusCard, 1440, 380, 0.9);
 	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 335 }, 70, TABLE_BLEND);
 	DrawFocusText("BONUS", (Vector2){ 1455, 715 }, 70, TABLE_BLEND);
 
 	// player info on top
-	HUDDrawPlayers(s->game.players, s->game.turnIndex);
+	HUDDrawPlayers(s->table->game.players, s->table->game.turnIndex);
 
 	// then pokajan anim
 	HUDDrawPokajanAnim();
@@ -107,9 +107,10 @@ static const SceneVTable GameVTable = {
 	.destroy = GameDestroy
 };
 
-Scene *GameCreate(void) {
+Scene *GameCreate(PokajanTable *table) {
 	GameScene *s = malloc(sizeof(GameScene));
     s->base.vtable = &GameVTable;
+	s->table = table;
     GameInit(s);
     return (Scene *)s;
 }

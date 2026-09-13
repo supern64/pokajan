@@ -9,7 +9,7 @@ set PATH=%COMPILER_PATH%;%PATH%
 set CC=gcc
 set CFLAGS=-s -static -O3 -std=c99 -Wall -Wshadow -Wunused-parameter -I%RAYLIB_PATH%\src -I%MOSQUITTO_PATH% -Iincl -DPLATFORM_DESKTOP -L. -L%MOSQUITTO_PATH%
 set LDFLAGS=-lraylib -lopengl32 -lgdi32 -lwinmm -lshcore -lmosquitto
-set POKAJAN_SOURCE_FILES=src\main.c src\component\component_card.c src\component\component_hud.c src\sound\sound.c src\pokajan_core\cards.c src\pokajan_core\pokajan.c src\scene\scene_title.c src\scene\scene_game.c src\scene\overlay_card_instructions.c src\scene\scene_manager.c src\utils\text.c src\utils\input.c
+set POKAJAN_SOURCE_FILES=src\main.c src\component\component_card.c src\component\component_hud.c src\sound\sound.c src\network\network.c src\network\bridge.c src\pokajan_core\cards.c src\pokajan_core\pokajan.c src\scene\scene_title.c src\scene\scene_game.c src\scene\overlay_card_instructions.c src\scene\scene_manager.c src\utils\text.c src\utils\input.c
 set PLAYER_UNIT_SIM_SOURCE_FILES=src\player_unit_sim.c src\component\component_card.c
 set CJSON_SOURCE_FILES=incl\cjson\cjson.c
 

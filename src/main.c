@@ -6,15 +6,22 @@
 #include "utils/text.h"
 #include "utils/misc.h"
 #include "sound/sound.h"
+#include "network/bridge.h"
+#include "network/network.h"
 
 int main(void) {
+	PokajanTable table;
+	BridgeInitTable(&table);
+
+	if (!NetworkInit(&table)) return -1;
+
 	InitWindow(1920, 1080, "Pokajan!");
 	InitAudioDevice();
 	SoundLoadBGM();
 
 	LoadFonts();
 	#ifdef F_SKIP_TO_GAME
-		SceneManagerInit(GameCreate());
+		SceneManagerInit(GameCreate(&table));
 	#else
 		SceneManagerInit(TitleCreate());
 	#endif
@@ -22,6 +29,7 @@ int main(void) {
 	SetTargetFPS(60);
 
 	while (!WindowShouldClose()) {
+		NetworkLoop();
 		SceneManagerUpdate();
 
 		BeginDrawing();
@@ -35,5 +43,7 @@ int main(void) {
 
 	CloseAudioDevice();
 	CloseWindow();
+
+	NetworkShutdown();
 	return 0;
 }

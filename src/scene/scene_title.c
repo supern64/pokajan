@@ -103,7 +103,7 @@ static void TitleUpdate(void *self) {
 			if (s->bgLogoSpeed > 1) {
 				s->bgLogoSpeed += 2;
 				if (s->bgLogoSpeed >= 40) {
-					SceneManagerSwitchTo(GameCreate());
+					// SceneManagerSwitchTo(GameCreate()); // TODO: figure out how to move the table around
 				}
 			}
 			break;
