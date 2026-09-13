@@ -4,7 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "D:\\Programming\\Other\\raylib\\raylib\\src"
+                "D:\\Programming\\Other\\raylib\\raylib\\src",
+                "C:\\Program Files\\Mosquitto\\devel"
             ],
             "defines": [
                 "_DEBUG",

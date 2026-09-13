@@ -1,6 +1,6 @@
 #include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
-#include "incl/raygui.h"
+#include <raygui.h>
 
 #include "component/component_card.h"
 
