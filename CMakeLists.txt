@@ -107,6 +107,15 @@ else()
         target_include_directories(pokajan_mosquitto INTERFACE "${MOSQUITTO_INCLUDE_DIR}")
         target_link_libraries(pokajan_mosquitto INTERFACE "${MOSQUITTO_LIBRARY}")
     endif()
+
+    if(BUILD_DRM AND FETCH_RAYLIB AND CMAKE_CROSSCOMPILING)
+        pkg_check_modules(LIBDRM QUIET libdrm)
+        if(LIBDRM_FOUND)
+            target_include_directories(raylib PRIVATE ${LIBDRM_INCLUDE_DIRS})
+        else()
+            target_include_directories(raylib PRIVATE "${CMAKE_SYSROOT}/usr/include/libdrm")
+        endif()
+    endif()
 endif()
 
 # ---------------------------------------------------------------------------
