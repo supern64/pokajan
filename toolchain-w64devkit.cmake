@@ -1,6 +1,6 @@
 set(CMAKE_SYSTEM_NAME Windows)
 
-set(DEVKIT_ROOT "D:/Programming/Other/raylib/w64devkit")
+set(DEVKIT_ROOT "C:/raylib/w64devkit")
 set(ENV{PATH} "${DEVKIT_ROOT}/bin;$ENV{PATH}")
  
 set(CMAKE_C_COMPILER   "${DEVKIT_ROOT}/bin/gcc.exe")

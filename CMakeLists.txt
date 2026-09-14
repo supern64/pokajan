@@ -4,8 +4,8 @@ project(pokajan C)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# === Configuration (mirrors your .bat) ===
-set(RAYLIB_PATH "D:/Programming/Other/raylib/raylib")
+# Default to standard installation locations
+set(RAYLIB_PATH "C:/raylib/raylib")
 set(MOSQUITTO_PATH "C:/Program Files/Mosquitto/devel")
 
 add_compile_options(-Wall -Wshadow -Wunused-parameter)
@@ -35,6 +35,7 @@ set(POKAJAN_SOURCES
         src/pokajan_core/pokajan.c
         src/scene/scene_title.c
         src/scene/scene_game.c
+        src/scene/scene_setup.c
         src/scene/overlay_card_instructions.c
         src/scene/scene_manager.c
         src/utils/text.c
@@ -50,6 +51,11 @@ option(BUILD_POKAJAN "Build main executable" ON)
 option(BUILD_PLAYER_UNIT_SIM "Build player unit simulator executable" ON)
 option(BUILD_DRM "Build the DRM variant" OFF)
 
+if (BUILD_DRM)
+    set(BUILD_POKAJAN OFF)
+    set(BUILD_PLAYER_UNIT_SIM OFF)
+endif()
+
 set(DESKTOP_TARGETS "")
 
 if(BUILD_POKAJAN)
@@ -62,7 +68,7 @@ if(BUILD_PLAYER_UNIT_SIM)
     list(APPEND DESKTOP_TARGETS player_unit_sim)
 endif()
 
-foreach(tgt pokajan player_unit_sim)
+foreach(tgt ${DESKTOP_TARGETS})
     set_target_properties(${tgt} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
     target_link_libraries(${tgt} PRIVATE raylib opengl32 gdi32 winmm shcore mosquitto)
     target_link_options(${tgt} PRIVATE -static -s)

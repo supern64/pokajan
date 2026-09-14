@@ -8,10 +8,10 @@
             "binaryDir": "${sourceDir}/build",
             "toolchainFile": "${sourceDir}/toolchain-w64devkit.cmake",
             "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "D:/Programming/Other/raylib/w64devkit/bin/ninja.exe"
+                "CMAKE_MAKE_PROGRAM": "C:/raylib/w64devkit/bin/ninja.exe"
             },
             "environment": {
-                "PATH": "D:/Programming/Other/raylib/w64devkit/bin;$penv{PATH}"
+                "PATH": "C:/raylib/w64devkit/bin;$penv{PATH}"
             }
         }
     ],
@@ -21,7 +21,7 @@
             "configurePreset": "w64devkit-ninja",
             "targets": "pokajan",
             "environment": {
-                "PATH": "D:/Programming/Other/raylib/w64devkit/bin;$penv{PATH}"
+                "PATH": "C:/raylib/w64devkit/bin;$penv{PATH}"
             }
         },
         {
@@ -29,7 +29,7 @@
             "configurePreset": "w64devkit-ninja",
             "targets": "player_unit_sim",
             "environment": {
-                "PATH": "D:/Programming/Other/raylib/w64devkit/bin;$penv{PATH}"
+                "PATH": "C:/raylib/w64devkit/bin;$penv{PATH}"
             }
         }
     ]
