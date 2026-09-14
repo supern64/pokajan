@@ -112,7 +112,7 @@ endif()
 # ---------------------------------------------------------------------------
 # Sources
 # ---------------------------------------------------------------------------
-set(CJSON_SOURCES incl/cjson/cjson.c)
+set(CJSON_SOURCES incl/cJSON/cJSON.c)
 
 set(POKAJAN_SOURCES
         src/main.c
