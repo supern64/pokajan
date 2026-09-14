@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "scene_manager.h"
-#include "scene_game.h"
+#include "scene_setup.h"
+#include "../network/bridge.h"
 #include "../utils/input.h"
 #include "../utils/text.h"
 
@@ -16,6 +17,8 @@ static Texture2D PokajanShadeLogo;
 
 typedef struct {
 	Scene base;
+	PokajanTable* table;
+
 	int phase;
 	double lastPhaseSwitch;
 
@@ -74,7 +77,7 @@ static void TitleUpdate(void *self) {
 				s->phase = 1;
 				s->fade = 1;
 				s->lastPhaseSwitch = GetTime();
-			} else if ((pokajanPressed || GetTime() - s->lastPhaseSwitch > 5.0) && s->fade == 0) {
+			} else if (s->table->seats[0].online && s->fade == 0) {
 				s->fade = -1;
 			}
 			
@@ -103,7 +106,7 @@ static void TitleUpdate(void *self) {
 			if (s->bgLogoSpeed > 1) {
 				s->bgLogoSpeed += 2;
 				if (s->bgLogoSpeed >= 40) {
-					// SceneManagerSwitchTo(GameCreate()); // TODO: figure out how to move the table around
+					SceneManagerSwitchTo(SetupCreate(s->table));
 				}
 			}
 			break;
@@ -115,10 +118,13 @@ static void TitleRender(void *self) {
 	switch (t->phase) {
 		case 0:
 			ClearBackground(BLACK);
-			DrawMainTextCenter("Please rotate the screen\nso the arrow points towards player #1.", 350, 70, FADE_WHITE);
+			DrawRectangleLines(350, 310, 1250, 450, FADE_WHITE);
+			DrawMainTextCenter("Please place the stands in\nthe positions shown.\nPower on P1's stand\nand wait for it to connect.", 340, 80, FADE_WHITE);
 
-			DrawRectangle(900, 600, 120, 200, FADE_WHITE);
-			DrawTriangle((Vector2){ 840, 800 }, (Vector2){ 960, 950 }, (Vector2){ 1080, 800 }, FADE_WHITE);
+			DrawFocusText("P1", (Vector2){ 900, 900 }, 100, FADE_WHITE);
+			DrawFocusText("P3", (Vector2){ 900, 80 }, 100, FADE_WHITE);
+			DrawFocusText("P2", (Vector2){ 100, 440 }, 100, FADE_WHITE);
+			DrawFocusText("P4", (Vector2){ 1720, 440 }, 100, FADE_WHITE);
 			break;
 		case 1:
 			ClearBackground(BLACK);
@@ -156,9 +162,10 @@ static const SceneVTable titleVTable = {
 	.destroy = TitleDestroy
 };
 
-Scene *TitleCreate(void) {
+Scene *TitleCreate(PokajanTable* table) {
 	TitleScene *s = malloc(sizeof(TitleScene));
     s->base.vtable = &titleVTable;
+	s->table = table;
     TitleInit(s);
     return (Scene *)s;
 }
