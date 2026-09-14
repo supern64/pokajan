@@ -10,7 +10,7 @@
 #define LN_70 4.24
 
 // flags
-#define F_SKIP_TO_GAME
+// #define F_SKIP_TO_GAME
 #define F_DEBUG
 
 // anchor macros, refer to numpad

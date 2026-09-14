@@ -7,6 +7,11 @@
 
 static CardTable CTable;
 static int loadedCount = 0;
+PokajanTable Table;
+
+PokajanTable* BridgeGetTable() {
+    return &Table;
+}
 
 int BridgeLoadCardTable() {
     FILE *f = fopen("card_table.csv", "r");

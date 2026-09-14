@@ -1,6 +1,6 @@
 #include <raylib.h>
 #include "scene/scene_manager.h"
-#include "scene/scene_title.h"
+#include "scene/scene_setup.h"
 #include "scene/scene_game.h"
 #include "utils/text.h"
 #include "utils/misc.h"
@@ -9,10 +9,10 @@
 #include "network/network.h"
 
 int main(void) {
-	PokajanTable table;
-	BridgeInitTable(&table);
+	PokajanTable* table = BridgeGetTable();
+	BridgeInitTable(table);
 
-	if (!NetworkInit(&table)) return -1;
+	if (!NetworkInit(table)) return -1;
 
 	InitWindow(1920, 1080, "Pokajan!");
 	InitAudioDevice();
@@ -20,9 +20,9 @@ int main(void) {
 
 	LoadFonts();
 	#ifdef F_SKIP_TO_GAME
-		SceneManagerInit(GameCreate(&table));
+		SceneManagerInit(GameCreate(table));
 	#else
-		SceneManagerInit(TitleCreate());
+		SceneManagerInit(SetupCreate(table));
 	#endif
 
 	SetTargetFPS(60);

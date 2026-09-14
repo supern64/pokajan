@@ -42,6 +42,8 @@ typedef struct {
     struct mosquitto* mosq;
 } PokajanTable;
 
+PokajanTable* BridgeGetTable();
+
 int BridgeLoadCardTable(void);
 Card BridgeResolveCard(NfcId id);
 

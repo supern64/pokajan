@@ -1,6 +1,9 @@
 #include "scene_setup.h"
 #include "scene_manager.h"
 #include "../network/bridge.h"
+#include "../utils/text.h"
+#include <raylib.h>
+#include <stdlib.h>
 
 typedef struct {
     Scene base;
@@ -20,6 +23,9 @@ static void SetupUpdate(void *self) {
 }
 
 static void SetupRender(void *self) {
+    ClearBackground(DARKGREEN);
+
+    DrawMainTextCenter("Welcome to Pokajan!", 60, 60, WHITE);
 
 }
 
