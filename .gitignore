@@ -1,5 +1,5 @@
 *.exe
+pokajan
 assets/
 build/
-cmake-build-debug/
 card_table.csv
