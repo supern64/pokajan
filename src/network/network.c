@@ -1,6 +1,7 @@
 #include "network.h"
 #include "network_internal.h"
 #include "bridge.h"
+#include "../utils/input.h"
 #include <stdio.h>
 #include <string.h>
 #include <mosquitto.h>
@@ -96,7 +97,13 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
     } else if (strcmp(action, "action") == 0) {
         // TODO
     } else if (strcmp(action, "button") == 0) {
-        // TODO
+        uint8_t button, type;
+        sscanf(msg->payload, "%hhu,%hhu", &button, &type);
+        if (type == 1) {
+            InputPress(standId, button);
+        } else {
+            InputRelease(standId, button);
+        }
     } else {
         TraceLog(LOG_WARNING, TextFormat("Invalid topic %s received, ignoring.", action));
     }
