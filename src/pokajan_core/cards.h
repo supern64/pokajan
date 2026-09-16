@@ -55,6 +55,28 @@ static const GenerationEntry GENERATIONS[15] = {
 	{ 6001, 6002, 6003, 6004, 6005 }  // ReGLOSS
 };
 
+// some mems appear in pokajan but do not appear in voices
+static const bool PLAYABLE_MEMBERS[15][5] = {
+	{  true,  true,  true,  true,  true }, // JP0
+	{  true,  true,  true,  true, false }, // JP1
+	{ false,  true,  true,  true, false }, // JP2
+	{  true,  true,  true,  true, false }, // GAMERS
+	{  true,  true,  true,  true, false }, // JP3
+	{ false,  true,  true,  true, false }, // JP4
+	{  true,  true,  true,  true, false }, // JP5
+	{  true,  true,  true, false,  true }, // HoloX
+
+	{  true,  true,  true, false, false }, // Myth
+	{  true, false, false,  true,  true }, // Promise
+	{  true,  true,  true,  true,  true }, // Advent
+
+	{  true,  true,  true, false, false }, // ID1
+	{  true,  true,  true, false, false }, // ID2
+	{  true,  true,  true, false, false }, // ID3
+
+	{ false,  true,  true,  true,  true }  // ReGLOSS
+};
+
 static const int GENERATION_MEMBER_COUNT[15] = { 5, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 3, 3, 3, 5 };
 
 // Gets 4 random valid generations for a Pokajan! game.
