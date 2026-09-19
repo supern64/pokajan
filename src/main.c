@@ -1,7 +1,10 @@
 #include <raylib.h>
+#include "component/component_char_mini_icon.h"
 #include "scene/scene_manager.h"
-#include "scene/scene_setup.h"
+#include "scene/scene_title.h"
 #include "scene/scene_game.h"
+#include "scene/scene_setup.h"
+#include "pokajan_core/cards.h"
 #include "utils/text.h"
 #include "utils/misc.h"
 #include "sound/sound.h"
@@ -9,6 +12,7 @@
 #include "network/network.h"
 
 int main(void) {
+	PokajanBuildLinearOrders();
 	PokajanTable* table = BridgeGetTable();
 	BridgeInitTable(table);
 
@@ -16,9 +20,13 @@ int main(void) {
 
 	InitWindow(1920, 1080, "Pokajan!");
 	InitAudioDevice();
-	SoundLoadBGM();
 
+	// load specific assets that are used throughout the whole game
+	SoundLoadBGM();
+	SoundLoadSFX();
 	LoadFonts();
+	CharMiniIconLoad();
+
 	#ifdef F_SKIP_TO_GAME
 		SceneManagerInit(GameCreate(table));
 	#else
@@ -37,7 +45,10 @@ int main(void) {
 	}
 
 	SceneManagerShutdown();
+
+	CharMiniIconUnload();
 	UnloadFonts();
+	SoundUnloadSFX();
 	SoundUnloadBGM();
 
 	CloseAudioDevice();
