@@ -127,6 +127,8 @@ set(POKAJAN_SOURCES
         src/main.c
         src/component/component_card.c
         src/component/component_hud.c
+        src/component/component_char_portrait.c
+        src/component/component_char_mini_icon.c
         src/sound/sound.c
         src/network/network.c
         src/network/bridge.c
