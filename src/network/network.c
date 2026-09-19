@@ -68,6 +68,8 @@ static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode
 }
 
 static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct mosquitto_message *msg) {
+    PokajanTable* t = (PokajanTable*)table;
+
     int standId;
     char action[8];
 
@@ -87,8 +89,13 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
             TraceLog(LOG_WARNING, TextFormat("Invalid payload received for topic online, ignoring.", action));
             return;
         }
-        BridgeOnStatusUpdate((PokajanTable*)table, standId, online == 1);
-    } else if (strcmp(action, "hand") == 0) {
+        BridgeOnStatusUpdate(t, standId, online == 1);
+    }
+
+
+    if (!t->seats[standId].online) return; // reject all offline seats
+    
+    if (strcmp(action, "hand") == 0) {
         // TODO
     } else if (strcmp(action, "drawn") == 0) {
         // TODO
