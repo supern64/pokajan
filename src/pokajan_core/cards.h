@@ -28,13 +28,35 @@ typedef struct {
 	Variant variant;
 } Card;
 
+
 #define EMPTY_CARD (Card){ .id = -1, .generation = -1, .variant = V_UNCOLORED }
 #define IS_EMPTY_CARD(card_) ((card_).id == -1)
 #define IS_SAME_CARD(a_, b_) ((a_).id == (b_).id && (a_).generation == (b_).generation && (a_).variant == (b_).variant)
 #define IS_SAME_MEMBER(a_, b_) ((a_).id == (b_).id && (a_).generation == (b_).generation)
 
+#define GENERATION_COUNT 15
+#define MEMBER_COUNT 63
+
+typedef struct {
+    int count;
+    int ids[MEMBER_COUNT];            // order -> member id
+    int gens[MEMBER_COUNT];           // order -> generation
+    int slots[MEMBER_COUNT];          // order -> slot within that generation
+    int orderOf[GENERATION_COUNT][5]; // [gen][slot] -> order, -1 if excluded
+} LinearOrder;
+
+typedef struct {
+	int order;
+	int id;
+	Generation generation;
+	int slot;
+} MemberSlot;
+
+#define EMPTY_MEMBER (MemberSlot){ .order = -1, .id = -1, .generation = -1, .slot = -1 };
+#define IS_EMPTY_MEMBER(mem_) ((mem_).order == -1)
+
 // -1 indicates an empty slot.
-static const GenerationEntry GENERATIONS[15] = {
+static const GenerationEntry GENERATIONS[GENERATION_COUNT] = {
 	{  1,  2, 13, 15, 18 }, // JP0
 	{  4,  5,  6,  7, -1 }, // JP1
 	{  9, 10, 11, 12, -1 }, // JP2
@@ -56,7 +78,7 @@ static const GenerationEntry GENERATIONS[15] = {
 };
 
 // some mems appear in pokajan but do not appear in voices
-static const bool PLAYABLE_MEMBERS[15][5] = {
+static const bool PLAYABLE_MEMBERS[GENERATION_COUNT][5] = {
 	{  true,  true,  true,  true,  true }, // JP0
 	{  true,  true,  true,  true, false }, // JP1
 	{ false,  true,  true,  true, false }, // JP2
@@ -77,7 +99,7 @@ static const bool PLAYABLE_MEMBERS[15][5] = {
 	{ false,  true,  true,  true,  true }  // ReGLOSS
 };
 
-static const int GENERATION_MEMBER_COUNT[15] = { 5, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 3, 3, 3, 5 };
+static const int GENERATION_MEMBER_COUNT[GENERATION_COUNT] = { 5, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 3, 3, 3, 5 };
 
 // Gets 4 random valid generations for a Pokajan! game.
 void PokajanGetRandomGenerations(Generation generations[4]);
@@ -90,5 +112,18 @@ bool PokajanIsAllSameCard(Card *cards, int count);
 
 // Gets the index of a member of a generation from their ID. Returns -1 if member is not part of generation.
 int PokajanGetMemberSlot(Generation generation, int id);
+
+// Builds the linear order entry for lookup. Should be called once on startup.
+void PokajanBuildLinearOrders(void);
+
+// Gets a member slot based on linear order.
+MemberSlot PokajanLinearOrderToMember(int order, bool playableOnly);
+
+// Gets the linear order based on the member's ID.
+int PokajanMemberIdToLinearOrder(int id, bool playableOnly);
+
+// Gets the number of members marked as playable. (No. of all members defined in MEMBER_COUNT)
+int PokajanGetPlayableCount(void);
+
 #endif
 

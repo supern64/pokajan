@@ -4,7 +4,7 @@
 #include "../utils/misc.h"
 
 static Texture2D CardAtlas[4];
-static Generation SlotMapping[15] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+static Generation SlotMapping[GENERATION_COUNT] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 static void CardLoadGeneration(Generation g, int slot) {
     switch (g) {
@@ -82,7 +82,7 @@ void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float sc
 }
 
 void CardDraw(Card card, int x, int y, float scale) {
-    if (card.id == -1) return; // don't attempt to render empty card
+    if (IS_EMPTY_CARD(card)) return;
     if (SlotMapping[card.generation] == -1) {
         TraceLog(LOG_WARNING, TextFormat("Attempted to render unloaded generation %d\n", card.generation));
         return;
