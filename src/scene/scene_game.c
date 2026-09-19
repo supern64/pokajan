@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include "scene_manager.h"
 #include "overlay_card_instructions.h"
-#include "../utils/text.h"
 #include "../component/component_card.h"
 #include "../component/component_hud.h"
 #include "../pokajan_core/cards.h"
 #include "../pokajan_core/pokajan.h"
 #include "../network/bridge.h"
 #include "../sound/sound.h"
+#include "../utils/text.h"
 #include "../utils/misc.h"
 #include "../utils/input.h"
 
@@ -32,6 +32,7 @@ static void GameInit(void *self) {
 
 static void GameStart(void *self) {
 	GameScene *s = (GameScene *)self;
+
 	SoundPlayBGM();
 	SceneManagerPush(CardInstructionsCreate(s->table->game.generations));
 }
@@ -94,7 +95,6 @@ static void GameRender(void *self) {
 }
 
 static void GameDestroy(void *self) {
-	SoundStopBGM();
 	CardUnload();
 	HUDUnload();
 	free(self);
