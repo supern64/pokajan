@@ -71,7 +71,7 @@ void BridgeInitTable(PokajanTable *table) {
         table->seats[i] = (Seat){
             .online = false,
             .state = WAIT_DRAW,
-            .characterId = 1,
+            .member = (MemberSlot){ 0, 1, 0, 0 }, // Tokino Sora
             .hand = { EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID },
             .drawnSlot = EMPTY_CARD_ID,
             .discardSlot = EMPTY_CARD_ID

@@ -21,7 +21,7 @@ typedef enum {
 typedef struct {
     bool online;
     SeatState state;
-    int characterId;
+    MemberSlot member;
 
     NfcId hand[7];
     NfcId drawnSlot;
