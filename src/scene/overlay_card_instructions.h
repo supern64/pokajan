@@ -2,8 +2,8 @@
 #define SCENE_OVERLAY_CARD_INSTRUCTIONS_H
 
 #include "scene.h"
-#include "../pokajan_core/cards.h"
+#include "../network/bridge.h"
 
-Scene *CardInstructionsCreate(Generation generations[4]);
+Scene *CardInstructionsCreate(PokajanTable* table);
 
 #endif

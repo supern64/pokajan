@@ -1,4 +1,5 @@
 #include "bridge.h"
+#include "network.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -20,8 +21,8 @@ int BridgeLoadCardTable() {
     while (fgets(line, sizeof(line), f) && i < MAX_CARDS) {
         char uid_hex[15];
         int id;
-        Generation gen;
-        Variant var;
+        uint8_t gen;
+        uint8_t var;
         bool reject = false;
 
         if (sscanf(line, "%14[^,],%d,%hhu,%hhu", uid_hex, &id, &gen, &var) != 4) {
@@ -71,6 +72,7 @@ void BridgeInitTable(PokajanTable *table) {
     for (int i = 0; i < 4; i++) {
         table->seats[i] = (Seat){
             .online = false,
+            .handReady = false,
             .state = WAIT_DRAW,
             .member = (MemberSlot){ 0, 1, 0, 0 }, // Tokino Sora
             .hand = { EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID, EMPTY_CARD_ID },
@@ -81,7 +83,44 @@ void BridgeInitTable(PokajanTable *table) {
 }
 
 void BridgeOnHandUpdate(PokajanTable *table, int standId, NfcId hand[7]) {
+    if (!table->allReady) {
+        // not all cards have been initialized -> see if every stand is ready then fire allReady
+        // no wrong state, so no need to check cards yet
 
+        bool isReady = true;
+        for (int i = 0; i < 7; i++) {
+            memcpy(table->seats[standId].hand[i], hand[i], 7);
+            isReady = memcmp(hand[i], (NfcId)EMPTY_CARD_ID, 7) != 0;
+        }
+        table->seats[standId].handReady = isReady;
+
+        bool allReady = true;
+        for (int i = 0; i < 4; i++) {
+            if (!table->seats[i].handReady) {
+                allReady = false;
+                break;
+            }
+        }
+        table->allReady = allReady;
+
+        if (allReady) {
+            for (int i = 0; i < 4; i++) {
+                Card engineHand[7];
+                for (int j = 0; j < 7; j++) {
+                    engineHand[j] = BridgeResolveCard(table->seats[i].hand[j]);
+                }
+                PokajanSetInitialHand(&table->game, i, engineHand);
+            }
+
+            for (int i = 0; i < 4; i++) {
+                Match matches[POKAJAN_MAX_MATCHES];
+                int nMatch = PokajanCheckMatches(&table->game, i, matches);
+                if (nMatch > 0) NetworkPostPlayerMatch(table, i, nMatch, matches);
+            }
+        }
+    } else {
+        // process card difference (removal/inserts)
+    }
 }
 
 void BridgeOnDrawnUpdate(PokajanTable *table, int standId, NfcId drawn) {
@@ -92,7 +131,7 @@ void BridgeOnDiscardUpdate(PokajanTable *table, int standId, NfcId discard) {
 
 }
 
-void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction action) {
+void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction action, int target) {
 
 }
 

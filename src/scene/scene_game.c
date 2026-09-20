@@ -32,7 +32,7 @@ static void GameInit(void *self) {
 
 static void GameStart(void *self) {
 	GameScene *s = (GameScene *)self;
-	SceneManagerPush(CardInstructionsCreate(s->table->game.generations));
+	SceneManagerPush(CardInstructionsCreate(s->table));
 }
 
 static void GameUpdate(void *self) {

@@ -25,6 +25,7 @@ typedef enum {
 
 typedef struct {
     bool online;
+    bool handReady;
     SeatState state;
     MemberSlot member;
 
@@ -54,6 +55,10 @@ Card BridgeResolveCard(NfcId id);
 
 void BridgeInitTable(PokajanTable *table);
 
+void BridgeOnHandUpdate(PokajanTable *table, int standId, NfcId hand[7]);
+void BridgeOnDrawnUpdate(PokajanTable *table, int standId, NfcId drawn);
+void BridgeOnDiscardUpdate(PokajanTable *table, int standId, NfcId discard);
+void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction action, int target);
 void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online);
 
 #endif
