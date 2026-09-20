@@ -55,6 +55,7 @@ int BridgeLoadCardTable() {
 }
 
 Card BridgeResolveCard(NfcId id) {
+    if (memcmp(id, (NfcId){ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }, 7) == 0) return EMPTY_CARD;
     for (int i = 0; i < loadedCount; i++) {
         if (memcmp(CTable[i].id, id, 7) == 0) {
             return CTable[i].card;
@@ -79,22 +80,20 @@ void BridgeInitTable(PokajanTable *table) {
     }
 }
 
-void BridgePostGameState(PokajanTable *table) {
-    for (int i = 0; i < 4; i++) {
-        char nCoins[5];
-        snprintf(nCoins, 5, "%d", table->game.players[i].coins);
-        mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/coins", i), strlen(nCoins), nCoins, 1, true);
-    }
+void BridgeOnHandUpdate(PokajanTable *table, int standId, NfcId hand[7]) {
 
-    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/current_turn", 2, TextFormat("%d", table->game.turnIndex), 1, true);
+}
 
-    char genList[12];
-    snprintf(genList, 12, "%hhu,%hhu,%hhu,%hhu", table->game.generations[0], table->game.generations[1], table->game.generations[2], table->game.generations[3]);
-    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/generations", strlen(genList), genList, 1, true);
+void BridgeOnDrawnUpdate(PokajanTable *table, int standId, NfcId drawn) {
 
-    char nDeckCount[4];
-    snprintf(nDeckCount, 4, "%d", table->game.cards);
-    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/deck_count", strlen(nDeckCount), nDeckCount, 1, true);
+}
+
+void BridgeOnDiscardUpdate(PokajanTable *table, int standId, NfcId discard) {
+
+}
+
+void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction action) {
+
 }
 
 void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online) {

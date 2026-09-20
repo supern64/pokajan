@@ -64,7 +64,7 @@ static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode
     mosquitto_subscribe_multiple(MosqInstance, NULL, 6, subTopics, 2, 0, NULL);
 
     // broadcast initial game information
-    BridgePostGameState((PokajanTable*)table);
+    NetworkPostGameState((PokajanTable*)table);
 }
 
 static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct mosquitto_message *msg) {
@@ -101,7 +101,8 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
     if (!t->seats[standId].online) return; // reject all offline seats
     
     if (strcmp(action, "hand") == 0) {
-        // TODO
+        NfcId hand[7];
+        
     } else if (strcmp(action, "drawn") == 0) {
         // TODO
     } else if (strcmp(action, "discard") == 0) {
@@ -121,3 +122,71 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
     }
 }
 
+void NetworkPostGameState(PokajanTable *table) {
+    for (int i = 0; i < 4; i++) {
+        char nCoins[5];
+        snprintf(nCoins, 5, "%d", table->game.players[i].coins);
+        mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/coins", i), strlen(nCoins), nCoins, 1, true);
+    }
+
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/current_turn", 2, TextFormat("%d", table->game.turnIndex), 1, true);
+
+    char genList[12];
+    snprintf(genList, 12, "%hhu,%hhu,%hhu,%hhu", table->game.generations[0], table->game.generations[1], table->game.generations[2], table->game.generations[3]);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/generations", strlen(genList), genList, 1, true);
+
+    char nDeckCount[4];
+    snprintf(nDeckCount, 4, "%d", table->game.cards);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/deck_count", strlen(nDeckCount), nDeckCount, 1, true);
+}
+
+void NetworkPostPlayerMatch(PokajanTable *table, int standId, int nMatch, Match matches[POKAJAN_MAX_MATCHES]) {
+    int bSize = nMatch * 15 + 1;
+    char matchArray[bSize];
+
+    matchArray[0] = '\0';
+    // for every match...
+    for (int i = 0; i < nMatch; i++) {
+        if (IS_EMPTY_MATCH(matches[i])) continue;
+        bool used[8] = { false };
+        int j = 0;
+        // loop through each card used in the match...
+        while (j < 5 && !IS_EMPTY_CARD(matches[i].matchInHand[j])) {
+            // and check which card in hand matches.
+            int inHand = -1;
+            for (int k = 0; k < 7; k++) {
+                if (used[k]) continue;
+                if (IS_SAME_CARD(matches[i].matchInHand[j], table->game.players[standId].hand[i])) {
+                    inHand = k;
+                    used[k] = true;
+                    break;
+                }
+            }
+            if (inHand == -1 && !used[7] && IS_SAME_CARD(matches[i].matchInHand[j], table->game.players[standId].drawnSlot)) {
+                inHand = 7;
+                used[7] = true;
+            }
+            // player sim handles -1 gracefully.
+            
+            char slotStr[4];
+            snprintf(slotStr, (j+1 < 5 && !IS_EMPTY_CARD(matches[i].matchInHand[j+1])) ? "%d," : "%d", 4, inHand);
+            strncat(matchArray, slotStr, bSize - strlen(matchArray) - 1);
+
+            j++;
+        }
+
+        char rewardStr[7];
+        snprintf(rewardStr, ":%d;", 7, matches[i].reward);
+        strncat(matchArray, rewardStr, bSize - strlen(matchArray) - 1);
+    }
+
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/matches", standId), strlen(matchArray), matchArray, 1, true);
+}
+
+void NetworkPostDiscardInUse(PokajanTable *table, int standId, DiscardLightState state) {
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/discard_in_use", standId), 2, TextFormat("%hhu", state), 1, true);
+}
+
+void NetworkPostMatchActionRequired(PokajanTable *table, int standId, bool required) {
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/match_action_required", standId), 2, required ? "1" : "0", 1, true);
+}

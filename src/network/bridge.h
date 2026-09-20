@@ -18,6 +18,11 @@ typedef enum {
     WAIT_TURN
 } SeatState;
 
+typedef enum {
+    DECLARE,
+    SKIP
+} DeclareAction;
+
 typedef struct {
     bool online;
     SeatState state;
@@ -49,7 +54,6 @@ Card BridgeResolveCard(NfcId id);
 
 void BridgeInitTable(PokajanTable *table);
 
-void BridgePostGameState(PokajanTable *table);
-
 void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online);
+
 #endif

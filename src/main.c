@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include "component/component_char_mini_icon.h"
+#include "component/component_hud.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_title.h"
 #include "scene/scene_game.h"
@@ -13,6 +14,7 @@
 
 int main(void) {
 	PokajanBuildLinearOrders();
+	BridgeLoadCardTable();
 	PokajanTable* table = BridgeGetTable();
 	BridgeInitTable(table);
 
@@ -26,11 +28,12 @@ int main(void) {
 	SoundLoadSFX();
 	LoadFonts();
 	CharMiniIconLoad();
+	HUDLoad();
 
 	#ifdef F_SKIP_TO_GAME
 		SceneManagerInit(GameCreate(table));
 	#else
-		SceneManagerInit(SetupCreate(table));
+		SceneManagerInit(TitleCreate(table));
 	#endif
 
 	SetTargetFPS(60);
@@ -46,6 +49,7 @@ int main(void) {
 
 	SceneManagerShutdown();
 
+	HUDUnload();
 	CharMiniIconUnload();
 	UnloadFonts();
 	SoundUnloadSFX();
