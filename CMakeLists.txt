@@ -13,7 +13,6 @@ endif()
 # Options
 # ---------------------------------------------------------------------------
 option(BUILD_POKAJAN "Build main executable" ON)
-option(BUILD_PLAYER_UNIT_SIM "Build player unit simulator executable" ON)
 option(BUILD_DRM "Build the DRM variant" OFF)
 
 # On Windows the raylib/mosquitto installers already give us binaries.
@@ -31,7 +30,6 @@ set(MOSQUITTO_PATH "C:/Program Files/Mosquitto/devel" CACHE PATH "Mosquitto deve
 
 if(BUILD_DRM)
     set(BUILD_POKAJAN OFF)
-    set(BUILD_PLAYER_UNIT_SIM OFF)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -143,11 +141,6 @@ set(POKAJAN_SOURCES
         src/utils/input.c
 )
 
-set(PLAYER_UNIT_SIM_SOURCES
-        src/player_unit_sim.c
-        src/component/component_card.c
-)
-
 # Shared per-target setup. Note this is per-target, not global: raylib is part
 # of our build tree now and must not inherit our warning flags or our
 # PLATFORM_* defines.
@@ -173,11 +166,6 @@ set(DESKTOP_TARGETS "")
 if(BUILD_POKAJAN)
     add_executable(pokajan ${POKAJAN_SOURCES} ${CJSON_SOURCES})
     list(APPEND DESKTOP_TARGETS pokajan)
-endif()
-
-if(BUILD_PLAYER_UNIT_SIM)
-    add_executable(player_unit_sim ${PLAYER_UNIT_SIM_SOURCES} ${CJSON_SOURCES})
-    list(APPEND DESKTOP_TARGETS player_unit_sim)
 endif()
 
 foreach(tgt ${DESKTOP_TARGETS})
