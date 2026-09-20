@@ -90,6 +90,11 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
             return;
         }
         BridgeOnStatusUpdate(t, standId, online == 1);
+        if (online == 0) { // from LWT
+            InputRelease(standId, POKAJAN);
+            InputRelease(standId, SKIP_CYCLE);
+        }
+        return;
     }
 
 
