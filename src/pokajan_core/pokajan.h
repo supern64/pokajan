@@ -72,5 +72,4 @@ bool PokajanResolveContestAndCommitDiscardMatch(Game *game, Match *outWinner);
 void PokajanEnd(Game *game);
 int PokajanGetWinners(Game *game, int outWinners[4]);
 
-int PokajanGetGenerationSlot(Game *game, Generation generation);
 #endif

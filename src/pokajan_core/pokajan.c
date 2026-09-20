@@ -789,10 +789,3 @@ int PokajanGetWinners(Game *game, int outWinners[4]) {
     }
     return winnerCount;
 }
-
-int PokajanGetGenerationSlot(Game *game, Generation generation) {
-    for (int i = 0; i < 4; i++) {
-        if (game->generations[i] == generation) return i;
-    }
-    return -1;
-}
