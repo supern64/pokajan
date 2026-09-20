@@ -169,14 +169,14 @@ void NetworkPostPlayerMatch(PokajanTable *table, int standId, int nMatch, Match 
             // player sim handles -1 gracefully.
             
             char slotStr[4];
-            snprintf(slotStr, (j+1 < 5 && !IS_EMPTY_CARD(matches[i].matchInHand[j+1])) ? "%d," : "%d", 4, inHand);
+            snprintf(slotStr, 4, (j+1 < 5 && !IS_EMPTY_CARD(matches[i].matchInHand[j+1])) ? "%d," : "%d", inHand);
             strncat(matchArray, slotStr, bSize - strlen(matchArray) - 1);
 
             j++;
         }
 
         char rewardStr[7];
-        snprintf(rewardStr, ":%d;", 7, matches[i].reward);
+        snprintf(rewardStr, 7, ":%d;", matches[i].reward);
         strncat(matchArray, rewardStr, bSize - strlen(matchArray) - 1);
     }
 
