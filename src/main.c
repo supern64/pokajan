@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <time.h>
 #include "component/component_char_mini_icon.h"
 #include "component/component_hud.h"
 #include "scene/scene_manager.h"
@@ -15,6 +16,7 @@
 int main(void) {
 	PokajanBuildLinearOrders();
 	BridgeLoadCardTable();
+	SetRandomSeed(time(NULL));
 	PokajanTable* table = BridgeGetTable();
 	BridgeInitTable(table);
 
