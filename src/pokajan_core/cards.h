@@ -67,7 +67,7 @@ static const GenerationEntry GENERATIONS[GENERATION_COUNT] = {
 	{ 35, 36, 37, 38, 39 }, // HoloX
 
 	{ 4001, 4002, 4003, 4004, 4005 }, // Myth
-	{ 4007, 4008, 4009, 4010, 4012 }, // Promise
+	{ 4007, 4009, 4010, 4011, 4012 }, // Promise
 	{ 4013, 4014, 4015, 4016, 4017 }, // Advent
 
 	{ 3001, 3002, 3003,   -1,   -1 }, // ID1
