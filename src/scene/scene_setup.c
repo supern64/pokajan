@@ -1,4 +1,5 @@
 #include "scene_setup.h"
+#include "scene_game.h"
 #include "scene_manager.h"
 #include "../component/component_char_mini_icon.h"
 #include "../network/bridge.h"
@@ -15,6 +16,9 @@ typedef struct {
 
     int memSlideAnimTimer[4];
     bool confirm[4];
+    bool allSet;
+
+    int startHold;
 } SetupScene;
 
 static void SetupInit(void *self) {
@@ -24,6 +28,8 @@ static void SetupInit(void *self) {
         s->memSlideAnimTimer[i] = 0;
         s->confirm[i] = false;
     }
+    s->allSet = false;
+    s->startHold = 0;
 }
 
 static void SetupStart(void *self) {
@@ -35,6 +41,8 @@ static void SetupUpdate(void *self) {
     SetupScene *s = (SetupScene *)self;
     uint8_t pokajanBtn = GetPokajanPressed();
     uint8_t skipCycleBtn = GetSkipPressed();
+
+    bool stillNotReady = false;
     for (int playerIdx = 0; playerIdx < 4; playerIdx++) {
         if ((skipCycleBtn >> playerIdx) & 1) {
             if (s->confirm[playerIdx]) {
@@ -60,6 +68,22 @@ static void SetupUpdate(void *self) {
                 s->memSlideAnimTimer[playerIdx] = 0;
             }
         }
+
+        if (!(s->confirm[playerIdx])) {
+            stillNotReady = true;
+        }
+    }
+
+    s->allSet = !stillNotReady;
+    if (s->allSet) {
+        if (GetPokajanDown() & P1) {
+            s->startHold += 1;
+            if (s->startHold == 240) {
+                SceneManagerSwitchTo(GameCreate(s->table));
+            }
+        } else {
+            s->startHold = 0;
+        }
     }
 }
 
@@ -67,7 +91,19 @@ static void SetupRender(void *self) {
     SetupScene* s = (SetupScene*)self;
     ClearBackground(DARKGREEN);
 
-    DrawMainTextCenter("Waiting for players...", 480, 80, WHITE);
+    if (s->allSet) {
+        DrawFocusTextCenter("Ready!", 430, 140, WHITE);
+        DrawMainTextCenter("P1, hold Pokajan! to start!", 590, 60, WHITE);
+        if (s->startHold > 0) {
+            DrawRectangleRounded((Rectangle){ 760, 690, 400, 30 }, 0.8f, 20, TABLE_BLEND);
+            BeginScissorMode(760, 690, (int)((s->startHold / 240.0f) * 400.0f), 30);
+                DrawRectangleRounded((Rectangle){ 760, 690, 400, 30 }, 0.8f, 20, WHITE);
+            EndScissorMode();
+        }
+    } else {
+        DrawMainTextCenter("Waiting for players...", 480, 80, WHITE);
+    }
+    
 
     Font *f = GetFocusFont();
     Font *m = GetMainFont();
