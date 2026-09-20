@@ -1,4 +1,5 @@
 #include "component_hud.h"
+#include "component_char_mini_icon.h"
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -191,7 +192,7 @@ static void HUDDrawRectangleRoundedRotated(Rectangle rec, float roundness, int s
     rlPopMatrix();
 }
 
-static void HUDDrawPlayerWidget(Vector2 circleCenter, const char* label, float rotation, int coins, int rank, bool isTurn) {
+static void HUDDrawPlayerWidget(Vector2 circleCenter, float rotation, MemberSlot member, int coins, int rank, bool isTurn) {
     float rad = DEG2RAD * (rotation - REF_ROTATION);
 
     Vector2 rc = Vector2Add(circleCenter, Vector2Rotate(rectOffset, rad));
@@ -199,33 +200,30 @@ static void HUDDrawPlayerWidget(Vector2 circleCenter, const char* label, float r
     Vector2 nc = Vector2Add(circleCenter, Vector2Rotate(coinNumberOffset, rad));
     Vector2 pc = Vector2Add(circleCenter, Vector2Rotate(placeOffset, rad));
 
-    DrawCircle(circleCenter.x, circleCenter.y, 60, TABLE_BLEND);
-    if (isTurn) DrawRing(circleCenter, 60, 70, 0, 360, 30, YELLOW);
+    CharMiniIconDrawRaw(member.generation, member.slot, circleCenter.x, circleCenter.y, 1.0f, rotation);
+    if (isTurn) DrawRing(circleCenter, 64, 74, 0, 360, 30, YELLOW);
 
     // rc is the rect's CENTER (matches DrawRectangleRoundedRotated's expectation)
     HUDDrawRectangleRoundedRotated((Rectangle){ rc.x, rc.y, 300, 100 }, 1.5f, 30, rotation, TABLE_BLEND);
-
-    Vector2 textSize = MeasureTextEx(*GetFocusFont(), label, 70, 1.0);
-    DrawTextPro(*GetFocusFont(), label, circleCenter, ANCHOR_5(textSize.x, textSize.y, 1), rotation, 70, 1.0, WHITE);
 
     HUDDrawCoin(cc.x, cc.y, 0.2f, rotation);
     HUDDrawCoinNumber(coins, nc.x, nc.y, rotation);
     HUDDrawPlace(rank, pc.x, pc.y, 0.2f, rotation);
 }
 
-void HUDDrawPlayers(Player players[4], int turnIndex) {
+void HUDDrawSeats(PokajanTable* table) {
     int ranks[4];
-    HUDCalculatePlayerRank(players, ranks);
+    HUDCalculatePlayerRank(table->game.players, ranks);
 
     Vector2 p1Center = Vector2Add(SCREEN_CENTER, widgetOffset);
     Vector2 p3Center = Vector2Subtract(SCREEN_CENTER, widgetOffset);
     Vector2 p2Center = Vector2Add(SCREEN_CENTER, Vector2Multiply(Vector2Rotate(widgetOffset, DEG2RAD * 90), sideMultiplier));
     Vector2 p4Center = Vector2Add(SCREEN_CENTER, Vector2Multiply(Vector2Rotate(widgetOffset, DEG2RAD * -90), sideMultiplier));
 
-    HUDDrawPlayerWidget(p1Center, "P1", 180.0f, players[0].coins, ranks[0], turnIndex == 0);
-    HUDDrawPlayerWidget(p2Center, "P2", 270.0f, players[1].coins, ranks[1], turnIndex == 1);
-    HUDDrawPlayerWidget(p3Center, "P3",   0.0f, players[2].coins, ranks[2], turnIndex == 2);
-    HUDDrawPlayerWidget(p4Center, "P4",  90.0f, players[3].coins, ranks[3], turnIndex == 3);
+    HUDDrawPlayerWidget(p1Center, 180.0f, table->seats[0].member, table->game.players[0].coins, ranks[0], table->game.turnIndex == 0);
+    HUDDrawPlayerWidget(p2Center, 270.0f, table->seats[1].member, table->game.players[1].coins, ranks[1], table->game.turnIndex == 1);
+    HUDDrawPlayerWidget(p3Center,   0.0f, table->seats[2].member, table->game.players[2].coins, ranks[2], table->game.turnIndex == 2);
+    HUDDrawPlayerWidget(p4Center,  90.0f, table->seats[3].member, table->game.players[3].coins, ranks[3], table->game.turnIndex == 3);
 }
 
 // pokajan! animation

@@ -5,6 +5,7 @@
 #include "overlay_card_instructions.h"
 #include "../component/component_card.h"
 #include "../component/component_hud.h"
+#include "../component/component_char_portrait.h"
 #include "../pokajan_core/cards.h"
 #include "../pokajan_core/pokajan.h"
 #include "../network/bridge.h"
@@ -26,14 +27,11 @@ static void GameInit(void *self) {
 	GameScene *s = (GameScene *)self;
 	s->cardSpacing = 0;
 
-	HUDLoad();
 	CardLoad(s->table->game.generations);
 }
 
 static void GameStart(void *self) {
 	GameScene *s = (GameScene *)self;
-
-	SoundPlayBGM();
 	SceneManagerPush(CardInstructionsCreate(s->table->game.generations));
 }
 
@@ -87,8 +85,7 @@ static void GameRender(void *self) {
 	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 335 }, 70, TABLE_BLEND);
 	DrawFocusText("BONUS", (Vector2){ 1455, 715 }, 70, TABLE_BLEND);
 
-	// player info on top
-	HUDDrawPlayers(s->table->game.players, s->table->game.turnIndex);
+	HUDDrawSeats(s->table);
 
 	// then pokajan anim
 	HUDDrawPokajanAnim();
@@ -96,7 +93,6 @@ static void GameRender(void *self) {
 
 static void GameDestroy(void *self) {
 	CardUnload();
-	HUDUnload();
 	free(self);
 }
 
