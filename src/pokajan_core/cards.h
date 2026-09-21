@@ -89,7 +89,7 @@ static const bool PLAYABLE_MEMBERS[GENERATION_COUNT][5] = {
 	{  true,  true,  true, false,  true }, // HoloX
 
 	{  true,  true,  true, false, false }, // Myth
-	{  true, false, false,  true,  true }, // Promise
+	{  true, false,  true, false,  true }, // Promise
 	{  true,  true,  true,  true,  true }, // Advent
 
 	{  true,  true,  true, false, false }, // ID1
