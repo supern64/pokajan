@@ -60,7 +60,7 @@ bool PokajanSetInitialHand(Game *game, int playerIndex, Card hand[7]);
 bool PokajanDraw(Game *game, int playerIndex, Card card);
 bool PokajanDiscardOnTurn(Game *game, int playerIndex, int from);
 
-int PokajanCheckMatches(Game *game, int playerIndex, Match matches[POKAJAN_MAX_MATCHES]);
+int PokajanCheckMatches(const Game *game, int playerIndex, Match matches[POKAJAN_MAX_MATCHES]);
 bool PokajanCommitSelfMatch(Game *game, int playerIndex, Match match);
 bool PokajanDiscardAfterMatch(Game *game, int playerIndex, int from);
 bool PokajanReplenish(Game *game, int playerIndex, Card card, int to);
@@ -70,6 +70,6 @@ bool PokajanDeclareContestOnDiscardMatch(Game *game, int playerIndex, Match matc
 bool PokajanResolveContestAndCommitDiscardMatch(Game *game, Match *outWinner);
 
 void PokajanEnd(Game *game);
-int PokajanGetWinners(Game *game, int outWinners[4]);
+int PokajanGetWinners(const Game *game, int outWinners[4]);
 
 #endif

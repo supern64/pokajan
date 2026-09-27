@@ -119,7 +119,7 @@ static Card PokajanFindCardOfColor(Card *cards, int count, int color) {
     return cards[0];
 }
 
-int PokajanCheckMatches(Game *game, int playerIndex, Match matches[POKAJAN_MAX_MATCHES]) {
+int PokajanCheckMatches(const Game *game, int playerIndex, Match matches[POKAJAN_MAX_MATCHES]) {
     if (playerIndex > 3 || playerIndex < 0) return 0;
     Player *player = &game->players[playerIndex];
     int matchCount = 0;
@@ -467,7 +467,7 @@ static bool PokajanResolvePayment(Game *game, int from, int to, int amount) {
 }
 
 // validates if this match actually exists in player's hand (does not validate reward/complete flag)
-static bool PokajanValidateMatch(Game *game, int playerIndex, Match match) {
+static bool PokajanValidateMatch(const Game *game, int playerIndex, Match match) {
     Card repr = match.matchInHand[0];
     if (IS_EMPTY_CARD(repr)) return false;
     if (playerIndex > 3 || playerIndex < 0) return false;
@@ -760,7 +760,7 @@ void PokajanEnd(Game *game) {
     game->ended = true;
 }
 
-int PokajanGetWinners(Game *game, int outWinners[4]) {
+int PokajanGetWinners(const Game *game, int outWinners[4]) {
     if (!game->ended) return 0;
     int order[4] = {0, 1, 2, 3};
 
