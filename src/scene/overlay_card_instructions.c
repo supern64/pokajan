@@ -22,7 +22,7 @@ static void CardInstructionsStart(void *self) {
 
 static void CardInstructionsUpdate(void *self) {
 	CardInstructionsOverlay *s = (CardInstructionsOverlay *)self;
-	if (s->table->allReady) SceneManagerPop();
+	if (s->table->state == WAIT_DRAW) SceneManagerPop();
 }
 
 static void CardInstructionsRender(void *self) {
@@ -54,14 +54,7 @@ static void CardInstructionsRender(void *self) {
 
 	DrawMainText("4. Deal 7 cards to each player and place them on the hand stands.", (Vector2){ 170, 620 }, 40, WHITE);
 
-	char waitingText[25];
-	snprintf(waitingText, 25, "Waiting for%s%s%s%s.", 
-		s->table->seats[0].handReady ? "" : " P1", 
-		s->table->seats[1].handReady ? "" : " P2", 
-		s->table->seats[2].handReady ? "" : " P3", 
-		s->table->seats[3].handReady ? "" : " P4"
-	);
-	DrawFocusTextCenter(waitingText, 780, 50, WHITE);
+	DrawFocusTextCenter("Waiting for all cards to be set.", 780, 50, WHITE);
 }
 
 static void CardInstructionsDestroy(void *self) {

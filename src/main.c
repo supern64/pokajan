@@ -15,7 +15,11 @@
 
 int main(void) {
 	PokajanBuildLinearOrders();
-	BridgeLoadCardTable();
+	int loaded = BridgeLoadCardTable();
+	if (loaded == -1) {
+		TraceLog(LOG_FATAL, "Failed to load card_table.csv. Please make sure the file exists.");
+		// exits
+	}
 	SetRandomSeed(time(NULL));
 	PokajanTable* table = BridgeGetTable();
 	BridgeInitTable(table);

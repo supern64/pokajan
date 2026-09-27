@@ -24,7 +24,7 @@ bool NetworkInit(PokajanTable* table) {
     mosquitto_connect_callback_set(MosqInstance, NetworkOnConnect);
     mosquitto_message_callback_set(MosqInstance, NetworkOnMessage);
 
-    mosquitto_will_set(MosqInstance, "pokajan/hub/status", 2, "0", 1, true);
+    mosquitto_will_set(MosqInstance, "pokajan/hub/status", 1, "0", 1, true);
     
     TraceLog(LOG_INFO, "Attempting to connect...");
     int res = mosquitto_connect(MosqInstance, DEFAULT_IP, DEFAULT_PORT, 60);
@@ -41,6 +41,8 @@ bool NetworkInit(PokajanTable* table) {
 
 void NetworkLoop() {
     mosquitto_loop(MosqInstance, 0, 1);
+
+    // TODO: reconnect
 }
 
 void NetworkShutdown() {
@@ -51,7 +53,7 @@ void NetworkShutdown() {
 
 // callback handlers
 static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode) {
-    mosquitto_publish(MosqInstance, NULL, "pokajan/hub/status", 2, "1", 1, true);
+    mosquitto_publish(MosqInstance, NULL, "pokajan/hub/status", 1, "1", 1, true);
     
     char* subTopics[] = {
         "pokajan/stand/+/status",
@@ -65,13 +67,13 @@ static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode
     mosquitto_subscribe_multiple(MosqInstance, NULL, 6, subTopics, 2, 0, NULL);
 
     // broadcast initial game information
-    NetworkPostGameState((PokajanTable*)table);
+    BridgeRepublishState((PokajanTable*)table);
 }
 
 static bool NetworkReadNfcId(char* hexString, NfcId outId) {
     if (strlen(hexString) != 14) return false;
     for (int j = 0; j < 14; j++) {
-        if (!isxdigit(hexString[j])) {
+        if (!isxdigit((unsigned char)hexString[j])) {
             return false;
         }
     }
@@ -81,6 +83,7 @@ static bool NetworkReadNfcId(char* hexString, NfcId outId) {
     return true;
 }
 
+// main event handler
 static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct mosquitto_message *msg) {
     PokajanTable* t = (PokajanTable*)table;
 
@@ -94,6 +97,11 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
 
     if (standId < 0 || standId > 3) {
         TraceLog(LOG_WARNING, TextFormat("Invalid stand ID %d referenced, ignoring.", standId));
+        return;
+    }
+
+    if (msg->payloadlen <= 0 || msg->payload == NULL) {
+        TraceLog(LOG_WARNING, TextFormat("Empty payload on %s, ignoring.", msg->topic));
         return;
     }
 
@@ -130,34 +138,37 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
             }
         }
 
-        BridgeOnHandUpdate(t, standId, hand);
+        BridgeOnSlotUpdate(t, standId, 0, 7, hand);
     } else if (strcmp(action, "drawn") == 0) {
         NfcId drawn;
 
-        if (msg->payloadlen != 15 || !NetworkReadNfcId(msg->payload, drawn)) {
+        if (!NetworkReadNfcId(msg->payload, drawn)) {
             TraceLog(LOG_WARNING, "Invalid drawn payload received, ignoring.");
             return;
         }
 
-        BridgeOnDrawnUpdate(t, standId, drawn);
+        BridgeOnSlotUpdate(t, standId, 7, 1, &drawn);
     } else if (strcmp(action, "discard") == 0) {
         NfcId discard;
 
-        if (msg->payloadlen != 15 || !NetworkReadNfcId(msg->payload, discard)) {
+        if (!NetworkReadNfcId(msg->payload, discard)) {
             TraceLog(LOG_WARNING, "Invalid discard payload received, ignoring.");
             return;
         }
 
-        BridgeOnDiscardUpdate(t, standId, discard);
+        BridgeOnSlotUpdate(t, standId, 8, 1, &discard);
     } else if (strcmp(action, "action") == 0) {
         int decAction;
         int target = -1;
-        sscanf(msg->payload, "%d,%d", &decAction, &target);
+        if (sscanf(msg->payload, "%d,%d", &decAction, &target) < 1 || (decAction != DECLARE && decAction != SKIP))  {
+            TraceLog(LOG_WARNING, "Invalid action payload received, ignoring.");
+            return;
+        }
 
         BridgeOnDeclareAction(t, standId, decAction, target);
     } else if (strcmp(action, "button") == 0) {
         uint8_t button, type;
-        sscanf(msg->payload, "%hhu,%hhu", &button, &type);
+        if (sscanf(msg->payload, "%hhu,%hhu", &button, &type) != 2 || (button != 0 && button != 1) || (type != 0 && type != 1)) return;
         if (type == 1) {
             InputPress(standId, button);
         } else {
@@ -168,26 +179,15 @@ static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct m
     }
 }
 
-void NetworkPostGameState(PokajanTable *table) {
-    for (int i = 0; i < 4; i++) {
-        char nCoins[5];
-        snprintf(nCoins, 5, "%d", table->game.players[i].coins);
-        mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/coins", i), strlen(nCoins), nCoins, 1, true);
-    }
-
-    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/current_turn", 2, TextFormat("%d", table->game.turnIndex), 1, true);
-
-    char genList[12];
-    snprintf(genList, 12, "%hhu,%hhu,%hhu,%hhu", table->game.generations[0], table->game.generations[1], table->game.generations[2], table->game.generations[3]);
-    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/generations", strlen(genList), genList, 1, true);
-
-    char nDeckCount[4];
-    snprintf(nDeckCount, 4, "%d", table->game.cards);
-    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/deck_count", strlen(nDeckCount), nDeckCount, 1, true);
+// posting information
+void NetworkPostCoins(PokajanTable *table, int standId, int coins) {
+    char nCoins[5];
+    snprintf(nCoins, 5, "%d", coins);
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/coins", standId), strlen(nCoins), nCoins, 1, true);
 }
 
 void NetworkPostPlayerMatch(PokajanTable *table, int standId, int nMatch, Match matches[POKAJAN_MAX_MATCHES]) {
-    int bSize = nMatch * 15 + 1;
+    int bSize = nMatch * 21 + 1;
     char matchArray[bSize];
 
     matchArray[0] = '\0';
@@ -226,13 +226,65 @@ void NetworkPostPlayerMatch(PokajanTable *table, int standId, int nMatch, Match 
         strncat(matchArray, rewardStr, bSize - strlen(matchArray) - 1);
     }
 
-    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/matches", standId), strlen(matchArray), matchArray, 1, false);
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/matches", standId), strlen(matchArray), matchArray, 1, true);
 }
 
 void NetworkPostDiscardInUse(PokajanTable *table, int standId, DiscardLightState state) {
-    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/discard_in_use", standId), 2, TextFormat("%hhu", state), 1, false);
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/discard_in_use", standId), 1, TextFormat("%d", state), 1, true);
 }
 
 void NetworkPostMatchActionRequired(PokajanTable *table, int standId, bool required) {
-    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/match_action_required", standId), 2, required ? "1" : "0", 1, false);
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/match_action_required", standId), 1, required ? "1" : "0", 1, true);
+}
+
+void NetworkPostError(PokajanTable *table, int standId, uint16_t slotMask, uint16_t typeMask) {
+    char errorStr[18];
+    errorStr[0] = '\0';
+
+    for (int i = 0; i < 9; i++) {
+        if (i != 0) strncat(errorStr, ",", 18 - strlen(errorStr) - 1);
+        if (slotMask >> i & 1) {
+            strncat(errorStr, (typeMask >> i & 1) ? "2" : "1", 18 - strlen(errorStr) - 1);
+        } else {
+            strncat(errorStr, "0", 18 - strlen(errorStr) - 1);
+        }
+    }
+
+    mosquitto_publish(table->mosq, NULL, TextFormat("pokajan/stand/%d/error", standId), strlen(errorStr), errorStr, 1, true);
+}
+
+void NetworkPostCurrentTurn(PokajanTable *table, int turnIndex) {
+    char currentTurnStr[3];
+    snprintf(currentTurnStr, 3, "%d", turnIndex);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/current_turn", strlen(currentTurnStr), currentTurnStr, 1, true);
+}
+
+void NetworkPostCurrentMatcher(PokajanTable *table, int matcherIndex) {
+    char matcherStr[3];
+    snprintf(matcherStr, 3, "%d", matcherIndex);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/current_match", strlen(matcherStr), matcherStr, 1, true);
+}
+
+void NetworkPostWinners(PokajanTable *table, int winnerCount, int winnerIdx[4]) {
+    char winnersStr[8];
+    winnersStr[0] = '\0';
+
+    for (int i = 0; i < winnerCount; i++) {
+        if (i != 0) strncat(winnersStr, ",", 8 - strlen(winnersStr) - 1);
+        strncat(winnersStr, TextFormat("%d", winnerIdx[i]), 8 - strlen(winnersStr) - 1);
+    }
+
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/game/winners", strlen(winnersStr), winnersStr, 1, true);
+}
+
+void NetworkPostGenerations(PokajanTable *table, int generations[4]) {
+    char genList[12];
+    snprintf(genList, 12, "%d,%d,%d,%d", generations[0], generations[1], generations[2], generations[3]);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/generations", strlen(genList), genList, 1, true);
+}
+
+void NetworkPostDeckCount(PokajanTable *table, int count) {
+    char nDeckCount[4];
+    snprintf(nDeckCount, 4, "%d", count);
+    mosquitto_publish(table->mosq, NULL, "pokajan/hub/debug/deck_count", strlen(nDeckCount), nDeckCount, 1, true);
 }
