@@ -31,7 +31,7 @@ typedef struct {
 
 #define EMPTY_CARD (Card){ .id = -1, .generation = -1, .variant = V_UNCOLORED }
 #define IS_EMPTY_CARD(card_) ((card_).id == -1)
-#define IS_SAME_CARD(a_, b_) ((a_).id == (b_).id && (a_).generation == (b_).generation && (a_).variant == (b_).variant)
+#define IS_SAME_CARD(a_, b_) (((a_).id == (b_).id && (a_).generation == (b_).generation && (a_).variant == (b_).variant) || ((a_).id == -1 && (b_).id == -1))
 #define IS_SAME_MEMBER(a_, b_) ((a_).id == (b_).id && (a_).generation == (b_).generation)
 
 #define GENERATION_COUNT 15
