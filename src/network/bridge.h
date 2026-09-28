@@ -14,11 +14,13 @@ typedef uint8_t NfcId[7];
 #define SET_CARD_ID(addr_, card_) (memcpy((addr_), (card_), sizeof(NfcId)))
 #define IS_CARD_ID_EMPTY(id_) IS_SAME_CARD_ID((id_), EMPTY_CARD_ID)
 
+// declarations
 typedef enum {
     DECLARE,
     SKIP
 } DeclareAction;
 
+// card table
 typedef struct {
     NfcId id;
     Card card;
@@ -26,6 +28,7 @@ typedef struct {
 
 typedef CardMap CardTable[MAX_CARDS];
 
+// expect
 #define MAX_EXPECT 32
 #define SLOT(s_) ((uint16_t)(1u << (s_))) // bitmask to indicate slots
 #define HAND_SLOTS ((uint16_t)0x007F)
@@ -60,6 +63,36 @@ typedef struct {
     Card resolvedCard;
 } Expect;
 
+// events
+#define MAX_EVENTS 64
+
+typedef enum {
+    EVENT_GAME_START,       // all initial hands placed
+    EVENT_TURN_START,       // standId = whose turn
+    EVENT_DRAW,             // standId, card
+    EVENT_DISCARD,          // standId, card
+    EVENT_CONTEST_OPEN,     // standId = discarder, eligibleMask
+    EVENT_CONTEST_CLOSED,   // standId = discarder, nobody declared
+    EVENT_POKAJAN,          // standId, match, fromDiscardOf, coinsBefore/After
+    EVENT_MATCH_END,        // standId = matcher
+    EVENT_ACTION_REJECTED,  // standId tried to act with a mismatched stand
+    EVENT_GAME_END          // winners, winnerCount, coinsAfter = final coins
+} TableEventType;
+
+typedef struct {
+    TableEventType type;
+    int standId;
+    int fromDiscardOf;      // -1 unless a Pokajan! used someone's discard
+    uint8_t eligibleMask;   // (1 << standId) per eligible contestant
+    Card card;
+    Match match;
+    int coinsBefore[4];
+    int coinsAfter[4];
+    int winners[4];
+    int winnerCount;
+} TableEvent;
+
+// various states
 typedef enum {
     WAIT_INITIAL_HANDS,
     WAIT_DRAW,
@@ -134,6 +167,11 @@ typedef struct {
     bool chainFromOwnTurn;
     uint16_t vacatedSlots;
     bool shortDeck; // deck ran out of cards for replenish, game ends
+
+    // events (see BridgePollEvent)
+    TableEvent events[MAX_EVENTS];
+    int eventHead;
+    int eventCount;
 } PokajanTable;
 
 PokajanTable* BridgeGetTable();
@@ -149,5 +187,7 @@ void BridgeRepublishState(PokajanTable *table);
 void BridgeOnSlotUpdate(PokajanTable *table, int standId, int from, int count, NfcId* cards);
 void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction action, int target);
 void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online);
+
+bool BridgePollEvent(PokajanTable *table, TableEvent *outEvent);
 
 #endif

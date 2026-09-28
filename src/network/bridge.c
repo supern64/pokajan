@@ -238,6 +238,45 @@ static int BridgeExpectMove(PokajanTable *table, int srcStand, uint16_t srcMask,
     return (int)(e - table->expect);
 }
 
+// events
+
+// Creates an event with coinsBefore/coinsAfter both set to the current coins.
+static TableEvent BridgeNewEvent(const PokajanTable *table, TableEventType type, int standId) {
+    TableEvent event = { 0 };
+    event.type = type;
+    event.standId = standId;
+    event.fromDiscardOf = -1;
+    event.card = EMPTY_CARD;
+    event.match = EMPTY_MATCH;
+    for (int s = 0; s < 4; s++) {
+        event.coinsBefore[s] = event.coinsAfter[s] = table->game.players[s].coins;
+    }
+    return event;
+}
+
+static void BridgeSetEventCoinsAfter(const PokajanTable *table, TableEvent *event) {
+    for (int s = 0; s < 4; s++) event->coinsAfter[s] = table->game.players[s].coins;
+}
+
+static void BridgePushEvent(PokajanTable *table, TableEvent event) {
+    if (table->eventCount == MAX_EVENTS) {
+        // drop the oldest; only happens if the scene stops draining
+        TraceLog(LOG_WARNING, "Event queue full, dropping oldest event.");
+        table->eventHead = (table->eventHead + 1) % MAX_EVENTS;
+        table->eventCount--;
+    }
+    table->events[(table->eventHead + table->eventCount) % MAX_EVENTS] = event;
+    table->eventCount++;
+}
+
+bool BridgePollEvent(PokajanTable *table, TableEvent *outEvent) {
+    if (table->eventCount == 0) return false;
+    *outEvent = table->events[table->eventHead];
+    table->eventHead = (table->eventHead + 1) % MAX_EVENTS;
+    table->eventCount--;
+    return true;
+}
+
 // diffs the shadow and observed card, and resolves the expect group
 static void BridgeSolveDiff(PokajanTable *table) {
     bool srcUsed[4][9] = { 0 };
@@ -427,6 +466,7 @@ static void BridgeEnterState(PokajanTable *table) {
 
         case WAIT_DRAW:
             if (g->ended || g->cards == 0) { BridgeTransitionTo(table, ENDED); return; }
+            BridgePushEvent(table, BridgeNewEvent(table, EVENT_TURN_START, g->turnIndex));
             NetworkPostCurrentTurn(table, g->turnIndex);
             NetworkPostCurrentMatcher(table, -1);
             BridgeExpectPut(table, g->turnIndex, SLOT(SLOT_DRAWN), EMPTY_CARD); // any card into drawn slot
@@ -479,9 +519,10 @@ static void BridgeEnterState(PokajanTable *table) {
             NetworkPostCurrentTurn(table, -1);
             NetworkPostCurrentMatcher(table, -1);
 
-            int winners[4];
-            int winnerCount = PokajanGetWinners(g, winners);
-            NetworkPostWinners(table, winnerCount, winners);
+            TableEvent event = BridgeNewEvent(table, EVENT_GAME_END, -1);
+            event.winnerCount = PokajanGetWinners(g, event.winners);
+            NetworkPostWinners(table, event.winnerCount, event.winners);
+            BridgePushEvent(table, event);
             break;
 
         default:
@@ -500,6 +541,7 @@ static void BridgeTransitionTo(PokajanTable *table, TableState next) {
 }
 
 static void BridgeFinishChain(PokajanTable *table) {
+    BridgePushEvent(table, BridgeNewEvent(table, EVENT_MATCH_END, table->matcherId));
     PokajanEndMatchSequence(&table->game);
     NetworkPostCurrentMatcher(table, -1);
     BridgeTransitionTo(table, table->chainFromOwnTurn ? WAIT_DISCARD : WAIT_DRAW);
@@ -517,6 +559,7 @@ static void BridgeCompleteState(PokajanTable *table) {
                 BridgeRefreshMatches(table, s);
             }
             NetworkPostDeckCount(table, g->cards);
+            BridgePushEvent(table, BridgeNewEvent(table, EVENT_GAME_START, -1));
             BridgeTransitionTo(table, WAIT_DRAW);
             break;
 
@@ -525,6 +568,9 @@ static void BridgeCompleteState(PokajanTable *table) {
             PokajanDraw(g, p, table->expect[0].resolvedCard);
             BridgeSyncEngineHands(table);
             NetworkPostDeckCount(table, g->cards);
+            TableEvent event = BridgeNewEvent(table, EVENT_DRAW, p);
+            event.card = table->expect[0].resolvedCard;
+            BridgePushEvent(table, event);
             BridgeRefreshMatches(table, p);
             BridgeTransitionTo(table, BridgeHasSelfComplete(table, p) ? WAIT_SELF_DECISION : WAIT_DISCARD);
             break;
@@ -532,17 +578,31 @@ static void BridgeCompleteState(PokajanTable *table) {
 
         case WAIT_DISCARD: {
             int p = g->turnIndex;
+            Card discarded = table->expect[0].resolvedCard;
             PokajanDiscardOnTurn(g, p, table->expect[0].srcSlot);
             table->discarderId = p;
             BridgeSyncEngineHands(table);
 
-            bool anyEligible = false;
+            TableEvent discardEvent = BridgeNewEvent(table, EVENT_DISCARD, p);
+            discardEvent.card = discarded;
+            BridgePushEvent(table, discardEvent);
+
+            uint8_t eligibleMask = 0;
             for (int q = 0; q < 4; q++) {
                 BridgeRefreshMatches(table, q); // discard reaction
                 table->seats[q].contestDecided = false;
                 table->seats[q].contestEligible = (q != p) && BridgeHasDiscardComplete(table, q, p);
-                anyEligible |= table->seats[q].contestEligible;
+                if (table->seats[q].contestEligible) eligibleMask |= (1u << q);
             }
+
+            bool anyEligible = eligibleMask != 0;
+
+            if (anyEligible) {
+                TableEvent contestEvent = BridgeNewEvent(table, EVENT_CONTEST_OPEN, p);
+                contestEvent.eligibleMask = eligibleMask;
+                BridgePushEvent(table, contestEvent);
+            }
+
             BridgeSetDiscardLight(table, p, anyEligible ? CONTESTABLE : NOT_IN_PLAY);
             BridgeTransitionTo(table, anyEligible ? WAIT_CONTEST : WAIT_DRAW);
             break;
@@ -681,13 +741,21 @@ static void BridgeResolveContest(PokajanTable *table) {
     Game *g = &table->game;
 
     if (g->contestants == 0) {
+        BridgePushEvent(table, BridgeNewEvent(table, EVENT_CONTEST_CLOSED, table->discarderId));
         BridgeSetDiscardLight(table, table->discarderId, NOT_IN_PLAY);
         BridgeTransitionTo(table, WAIT_DRAW);
         return;
     }
 
+    TableEvent event = BridgeNewEvent(table, EVENT_POKAJAN, -1); // captures coins before payout
     Match winner;
     PokajanResolveContestAndCommitDiscardMatch(g, &winner);
+
+    event.standId = winner.playerIndex;
+    event.fromDiscardOf = table->discarderId;
+    event.match = winner;
+    BridgeSetEventCoinsAfter(table, &event);
+    BridgePushEvent(table, event); // before a possible ENDED, so the order is Pokajan! -> game end
 
     BridgePostCoins(table);
     if (g->ended) { BridgeTransitionTo(table, ENDED); return; }
@@ -700,7 +768,11 @@ static void BridgeResolveContest(PokajanTable *table) {
 }
 
 void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction action, int target) {
-    if (table->seats[standId].mismatch) return; // eventually, send warning event to scene
+    if (table->seats[standId].mismatch) {
+        BridgePushEvent(table, BridgeNewEvent(table, EVENT_ACTION_REJECTED, standId));
+        return;
+    }
+    
     Game *g = &table->game;
 
     if (action == DECLARE && (target < 0 || target >= table->seats[standId].matchCount)) return;
@@ -719,7 +791,13 @@ void BridgeOnDeclareAction(PokajanTable *table, int standId, DeclareAction actio
                 break;
             }
             if (!m->complete || m->useDiscardOf != -1) return;
+
+            TableEvent event = BridgeNewEvent(table, EVENT_POKAJAN, standId);
             if (!PokajanCommitSelfMatch(g, standId, *m)) return;
+            event.match = *m;
+            BridgeSetEventCoinsAfter(table, &event);
+            BridgePushEvent(table, event);
+            
             BridgePostCoins(table);
             if (g->ended) { BridgeTransitionTo(table, ENDED); break; }
             if (table->state == WAIT_SELF_DECISION) table->chainFromOwnTurn = true;
@@ -756,4 +834,12 @@ void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online) {
     bool wasOnline = table->seats[standId].online;
     table->seats[standId].online = online;
     if (online && !wasOnline) BridgeRepublishSeat(table, standId);
+}
+
+bool BridgePollEvent(PokajanTable *table, TableEvent *outEvent) {
+    if (table->eventCount == 0) return false;
+    *outEvent = table->events[table->eventHead];
+    table->eventHead = (table->eventHead + 1) % MAX_EVENTS;
+    table->eventCount--;
+    return true;
 }
