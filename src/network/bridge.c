@@ -177,6 +177,20 @@ static int BridgeCurrentMatcher(const PokajanTable *table) {
     }
 }
 
+static int BridgeFirstEmptyEngineSlot(const Game *g, int p) {
+    for (int i = 0; i < 7; i++) if (IS_EMPTY_CARD(g->players[p].hand[i])) return i;
+    return -1;
+}
+
+static void BridgeSyncEngineHand(PokajanTable *table, int s) {
+    for (int i = 0; i < 7; i++) table->game.players[s].hand[i] = table->seats[s].shadowCard[i];
+    table->game.players[s].drawnSlot = table->seats[s].shadowCard[SLOT_DRAWN];
+}
+
+static void BridgeSyncEngineHands(PokajanTable *table) {
+    for (int s = 0; s < 4; s++) BridgeSyncEngineHand(table, s);
+}
+
 // manage your expectations (hah)
 
 static Expect* BridgeNewExpect(PokajanTable *table, ExpectAction action) {
@@ -251,7 +265,6 @@ static void BridgeSolveDiff(PokajanTable *table) {
                     e->done = e->vacuous = true; // dependency already took our source
                     continue;
                 }
-                dstMask = SLOT(dep->srcSlot);
             }
 
             // card IDs are unique, so if some card ID is seen in a different slot it is assumed to be moved
@@ -318,6 +331,23 @@ static void BridgeSolveDiff(PokajanTable *table) {
         }
     }
 
+    // explains any shuffles (won't use cards already used by expect)
+    for (int s = 0; s < 4; s++) {
+        table->seats[s].shuffled = false;
+        for (int d = 0; d < 7; d++) {
+            const uint8_t *u = table->seats[s].observed[d];
+            if (IS_CARD_ID_EMPTY(u) || dstUsed[s][d]) continue;
+            if (IS_SAME_CARD_ID(table->seats[s].shadow[d], u)) continue;
+            for (int k = 0; k < 7; k++) {
+                if (k == d || srcUsed[s][k]) continue;
+                if (!IS_SAME_CARD_ID(table->seats[s].shadow[k], u)) continue;
+                srcUsed[s][k] = dstUsed[s][d] = true;
+                table->seats[s].shuffled = true;
+                break;
+            }
+        }
+    }
+
     // resolve any removal of discard slots automatically
     for (int s = 0; s < 4; s++) {
         const uint8_t *u = table->seats[s].shadow[SLOT_DISCARD];
@@ -346,6 +376,30 @@ static void BridgeSolveDiff(PokajanTable *table) {
             }
         }
     }
+}
+
+static void BridgeCommitShuffles(PokajanTable *table) {
+    bool any = false;
+    for (int s = 0; s < 4; s++) {
+        Seat *seat = &table->seats[s];
+        if (!seat->shuffled || seat->mismatch) continue;
+
+        bool touched = false; // an expectation already used this stand: wait for the phase
+        for (int i = 0; i < table->expectCount; i++) {
+            const Expect *e = &table->expect[i];
+            if (e->done && (e->srcStand == s || e->dstStand == s)) touched = true;
+        }
+        if (touched) continue;
+
+        for (int i = 0; i < 7; i++) {
+            SET_CARD_ID(seat->shadow[i], seat->observed[i]);
+            seat->shadowCard[i] = seat->observedCard[i];
+        }
+        BridgeSyncEngineHand(table, s);
+        NetworkPostPlayerMatch(table, s, seat->matchCount, seat->matches); // same list, new slots
+        any = true;
+    }
+    if (any) BridgeSolveDiff(table);
 }
 
 static bool BridgeExpectGroupComplete(const PokajanTable *table) {
@@ -386,7 +440,7 @@ static void BridgeEnterState(PokajanTable *table) {
             int p = g->turnIndex;
 
             int pick = BridgeExpectMove(table, p, FULL_SLOTS, p, SLOT(SLOT_DISCARD), -1); // expect a move from full slots into discard...
-            BridgeExpectMove(table, p, SLOT(SLOT_DRAWN), p, 0, pick); // ...then from drawn into full slots. (will autoresolve if removed card was drawn card)
+            BridgeExpectMove(table, p, SLOT(SLOT_DRAWN), p, HAND_SLOTS, pick); // ...then from drawn into full slots. (will autoresolve if removed card was drawn card)
             break;
         }
 
@@ -412,7 +466,7 @@ static void BridgeEnterState(PokajanTable *table) {
 
             int available = g->cards;
             int placeUpTo = needCount < available ? needCount : available;
-            for (int i = 0; i < placeUpTo; i++) BridgeExpectPut(table, p, handHoles, EMPTY_CARD);
+            for (int i = 0; i < placeUpTo; i++) BridgeExpectPut(table, p, HAND_SLOTS, EMPTY_CARD);
             if (needDrawn && available > placeUpTo) BridgeExpectPut(table, p, SLOT(SLOT_DRAWN), EMPTY_CARD);
 
             table->shortDeck = (placeUpTo < needCount) || (needDrawn && available <= needCount);
@@ -460,6 +514,7 @@ static void BridgeCompleteState(PokajanTable *table) {
                 Card hand[7];
                 for (int i = 0; i < 7; i++) hand[i] = table->seats[s].shadowCard[i];
                 PokajanSetInitialHand(g, s, hand);
+                BridgeRefreshMatches(table, s);
             }
             NetworkPostDeckCount(table, g->cards);
             BridgeTransitionTo(table, WAIT_DRAW);
@@ -468,6 +523,7 @@ static void BridgeCompleteState(PokajanTable *table) {
         case WAIT_DRAW: {
             int p = g->turnIndex;
             PokajanDraw(g, p, table->expect[0].resolvedCard);
+            BridgeSyncEngineHands(table);
             NetworkPostDeckCount(table, g->cards);
             BridgeRefreshMatches(table, p);
             BridgeTransitionTo(table, BridgeHasSelfComplete(table, p) ? WAIT_SELF_DECISION : WAIT_DISCARD);
@@ -478,6 +534,7 @@ static void BridgeCompleteState(PokajanTable *table) {
             int p = g->turnIndex;
             PokajanDiscardOnTurn(g, p, table->expect[0].srcSlot);
             table->discarderId = p;
+            BridgeSyncEngineHands(table);
 
             bool anyEligible = false;
             for (int q = 0; q < 4; q++) {
@@ -486,7 +543,7 @@ static void BridgeCompleteState(PokajanTable *table) {
                 table->seats[q].contestEligible = (q != p) && BridgeHasDiscardComplete(table, q, p);
                 anyEligible |= table->seats[q].contestEligible;
             }
-            NetworkPostDiscardInUse(table, p, anyEligible ? CONTESTABLE : NOT_IN_PLAY);
+            BridgeSetDiscardLight(table, p, anyEligible ? CONTESTABLE : NOT_IN_PLAY);
             BridgeTransitionTo(table, anyEligible ? WAIT_CONTEST : WAIT_DRAW);
             break;
         }
@@ -502,9 +559,10 @@ static void BridgeCompleteState(PokajanTable *table) {
                     table->vacatedSlots |= SLOT(e->srcSlot);
                 }
             }
+            BridgeSyncEngineHands(table);
 
             if (m->useDiscardOf != -1) {
-                NetworkPostDiscardInUse(table, m->useDiscardOf, NOT_IN_PLAY);
+                BridgeSetDiscardLight(table, m->useDiscardOf, NOT_IN_PLAY);
             }
             BridgeTransitionTo(table, MATCH_REPLENISH);
             break;
@@ -515,9 +573,10 @@ static void BridgeCompleteState(PokajanTable *table) {
             for (int i = 0; i < table->expectCount; i++) {
                 Expect *e = &table->expect[i];
                 if (e->dstSlot == SLOT_DRAWN) PokajanDraw(g, p, e->resolvedCard);
-                else PokajanReplenish(g, p, e->resolvedCard, e->dstSlot);
+                else PokajanReplenish(g, p, e->resolvedCard, BridgeFirstEmptyEngineSlot(g, p));
             }
 
+            BridgeSyncEngineHands(table);
             NetworkPostDeckCount(table, g->cards);
             if (table->shortDeck) { BridgeTransitionTo(table, ENDED); break; }
 
@@ -613,6 +672,7 @@ void BridgeOnSlotUpdate(PokajanTable *table, int standId, int from, int count, N
     }
 
     BridgeSolveDiff(table);
+    BridgeCommitShuffles(table);
     BridgePostSlotStatus(table, false);
     if (table->state != ENDED) BridgeAdvance(table);
 }
@@ -621,7 +681,7 @@ static void BridgeResolveContest(PokajanTable *table) {
     Game *g = &table->game;
 
     if (g->contestants == 0) {
-        NetworkPostDiscardInUse(table, table->discarderId, NOT_IN_PLAY);
+        BridgeSetDiscardLight(table, table->discarderId, NOT_IN_PLAY);
         BridgeTransitionTo(table, WAIT_DRAW);
         return;
     }
@@ -632,7 +692,7 @@ static void BridgeResolveContest(PokajanTable *table) {
     BridgePostCoins(table);
     if (g->ended) { BridgeTransitionTo(table, ENDED); return; }
 
-    NetworkPostDiscardInUse(table, table->discarderId, USED_IN_CONTEST);
+    BridgeSetDiscardLight(table, table->discarderId, USED_IN_CONTEST);
     table->matcherId = winner.playerIndex;
     table->chainFromOwnTurn = false;
     NetworkPostCurrentMatcher(table, table->matcherId);

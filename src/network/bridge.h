@@ -92,6 +92,7 @@ typedef struct {
     Card observedCard[9];
     NfcId shadow[9];
     Card shadowCard[9];
+    bool shuffled;
 
     SlotState slotState[9];
     bool mismatch;
