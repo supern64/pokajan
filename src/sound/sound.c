@@ -67,20 +67,20 @@ void SoundUnloadBGM(void) {
 }
 
 void SoundLoadSFX(void) {
-    SFX[CARD_DRAWN] = LoadSound("assets/sfx/draw.wav");
-    SFX[CARD_DISCARDED] = LoadSound("assets/sfx/select_discard.wav");
-    SFX[DISCARD_AVAILABLE] = LoadSound("assets/sfx/discard_usable.wav");
-    SFX[DISCARD_USED] = LoadSound("assets/sfx/discard_declare.wav");
-    SFX[DECLARE_1] = LoadSound("assets/sfx/declare.wav");
-    SFX[DECLARE_2] = LoadSound("assets/sfx/declare_big.wav");
-    SFX[COIN] = LoadSound("assets/sfx/coin.wav");
-    SFX[OUT_OF_COINS] = LoadSound("assets/sfx/end_drained.wav");
-    SFX[OUT_OF_CARDS] = LoadSound("assets/sfx/end_nocards.wav");
-    SFX[HIGHLIGHT_WINNER] = LoadSound("assets/sfx/end_winner.wav");
+    SFX[SFX_CARD_DRAWN] = LoadSound("assets/sfx/draw.wav");
+    SFX[SFX_CARD_DISCARDED] = LoadSound("assets/sfx/select_discard.wav");
+    SFX[SFX_DISCARD_AVAILABLE] = LoadSound("assets/sfx/discard_usable.wav");
+    SFX[SFX_DISCARD_USED] = LoadSound("assets/sfx/discard_declare.wav");
+    SFX[SFX_DECLARE_1] = LoadSound("assets/sfx/declare.wav");
+    SFX[SFX_DECLARE_2] = LoadSound("assets/sfx/declare_big.wav");
+    SFX[SFX_COIN] = LoadSound("assets/sfx/coin.wav");
+    SFX[SFX_OUT_OF_COINS] = LoadSound("assets/sfx/end_drained.wav");
+    SFX[SFX_OUT_OF_CARDS] = LoadSound("assets/sfx/end_nocards.wav");
+    SFX[SFX_HIGHLIGHT_WINNER] = LoadSound("assets/sfx/end_winner.wav");
 
     // create sound aliases for coin
     for (int i = 0; i < 10; i++) {
-        SFXCoinAlias[i] = LoadSoundAlias(SFX[COIN]);
+        SFXCoinAlias[i] = LoadSoundAlias(SFX[SFX_COIN]);
     }
 }
 
@@ -106,10 +106,17 @@ void SoundUnloadSFX(void) {
 
 void SoundLoadCharacterVoiceIntoSlot(int id, int slot) {
     if (CharacterVoicesSlot[slot] != -1) return;
-    CharacterVoices[slot][POKAJAN_1] = LoadSound(TextFormat("assets/vo/cv-sys_chr-%05d_mg-combo-card-glad-01.wav", id));
-    CharacterVoices[slot][POKAJAN_2] = LoadSound(TextFormat("assets/vo/cv-sys_chr-%05d_mg-combo-card-glad-02.wav", id));
-    CharacterVoices[slot][SELECTED] = LoadSound(TextFormat("assets/vo/cv-sys_chr-%05d_mg-combo-card-start-01.wav", id));
+    CharacterVoices[slot][CV_POKAJAN_1] = LoadSound(TextFormat("assets/vo/cv-sys_chr-%05d_mg-combo-card-glad-01.wav", id));
+    CharacterVoices[slot][CV_POKAJAN_2] = LoadSound(TextFormat("assets/vo/cv-sys_chr-%05d_mg-combo-card-glad-02.wav", id));
+    CharacterVoices[slot][CV_SELECTED] = LoadSound(TextFormat("assets/vo/cv-sys_chr-%05d_mg-combo-card-start-01.wav", id));
     CharacterVoicesSlot[slot] = id;
+}
+
+void SoundEnsureCharacterVoiceLoaded(void) {
+    for (int i = 0; i < 4; i++) {
+        if (CharacterVoicesSlot[i] != -1) continue;
+        SoundLoadCharacterVoiceIntoSlot(1, i); // force load sora's voice into all slots for debugging
+    }
 }
 
 void SoundPlayCharacterVoiceFromSlot(int slot, CharacterVoice voice) {

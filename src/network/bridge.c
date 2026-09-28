@@ -248,6 +248,7 @@ static TableEvent BridgeNewEvent(const PokajanTable *table, TableEventType type,
     event.fromDiscardOf = -1;
     event.card = EMPTY_CARD;
     event.match = EMPTY_MATCH;
+    event.borrowed = EMPTY_CARD;
     for (int s = 0; s < 4; s++) {
         event.coinsBefore[s] = event.coinsAfter[s] = table->game.players[s].coins;
     }
@@ -748,6 +749,7 @@ static void BridgeResolveContest(PokajanTable *table) {
     }
 
     TableEvent event = BridgeNewEvent(table, EVENT_POKAJAN, -1); // captures coins before payout
+    event.borrowed = g->players[table->discarderId].lastDiscard;
     Match winner;
     PokajanResolveContestAndCommitDiscardMatch(g, &winner);
 

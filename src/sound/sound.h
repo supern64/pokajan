@@ -2,22 +2,22 @@
 #define SOUND_H
 
 typedef enum {
-    CARD_DRAWN,
-    CARD_DISCARDED,
-    DISCARD_AVAILABLE,
-    DISCARD_USED,
-    DECLARE_1,
-    DECLARE_2,
-    COIN,
-    OUT_OF_COINS,
-    OUT_OF_CARDS,
-    HIGHLIGHT_WINNER
+    SFX_CARD_DRAWN,
+    SFX_CARD_DISCARDED,
+    SFX_DISCARD_AVAILABLE,
+    SFX_DISCARD_USED,
+    SFX_DECLARE_1,
+    SFX_DECLARE_2,
+    SFX_COIN,
+    SFX_OUT_OF_COINS,
+    SFX_OUT_OF_CARDS,
+    SFX_HIGHLIGHT_WINNER
 } SoundEffect;
 
 typedef enum {
-    POKAJAN_1,
-    POKAJAN_2,
-    SELECTED
+    CV_POKAJAN_1,
+    CV_POKAJAN_2,
+    CV_SELECTED
 } CharacterVoice;
 
 void SoundLoadBGM(void);
@@ -31,6 +31,7 @@ void SoundPlaySFX(SoundEffect sfx);
 void SoundPlaySFXCoin(int count);
 void SoundUnloadSFX(void);
 void SoundLoadCharacterVoiceIntoSlot(int id, int slot);
+void SoundEnsureCharacterVoiceLoaded(void);
 void SoundPlayCharacterVoiceFromSlot(int slot, CharacterVoice voice);
 void SoundUnloadCharacterVoiceSlot(int slot);
 void SoundUnloadCharacterVoices(void);

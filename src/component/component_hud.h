@@ -6,12 +6,15 @@
 #include "../network/bridge.h"
 
 void HUDLoad(void);
+
+// for main game scene
 void HUDDrawSeats(PokajanTable* table);
 void HUDDrawGenIndicator(Generation generation, int x, int y, float scale, float rotation);
 void HUDDrawGenIndicators(Generation generations[4]);
-void HUDDrawPokajanAnim(void);
-void HUDInitPokajanAnim(int playerIndex);
-void HUDUpdatePokajanAnim(void);
+
+// for overlay
+void HUDDrawPokajanLogo(int x, int y, float scale, float rotation, Color tint);
+
 void HUDUnload(void);
 
 #endif

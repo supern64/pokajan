@@ -85,6 +85,7 @@ typedef struct {
     int fromDiscardOf;      // -1 unless a Pokajan! used someone's discard
     uint8_t eligibleMask;   // (1 << standId) per eligible contestant
     Card card;
+    Card borrowed;
     Match match;
     int coinsBefore[4];
     int coinsAfter[4];

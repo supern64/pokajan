@@ -132,10 +132,12 @@ set(POKAJAN_SOURCES
         src/network/bridge.c
         src/pokajan_core/cards.c
         src/pokajan_core/pokajan.c
+        src/pokajan_core/member_data.c
         src/scene/scene_title.c
         src/scene/scene_game.c
         src/scene/scene_setup.c
         src/scene/overlay_card_instructions.c
+        src/scene/overlay_pokajan_anim.c
         src/scene/scene_manager.c
         src/utils/text.c
         src/utils/input.c

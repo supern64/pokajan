@@ -61,7 +61,7 @@ static void SetupUpdate(void *self) {
             s->confirm[playerIdx] = true;
             SoundLoadCharacterVoiceIntoSlot(s->table->seats[playerIdx].member.id, playerIdx);
             CharPortraitLoadIntoSlot(s->table->seats[playerIdx].member.id, playerIdx);
-            SoundPlayCharacterVoiceFromSlot(playerIdx, SELECTED);
+            SoundPlayCharacterVoiceFromSlot(playerIdx, CV_SELECTED);
         }
 
         // update selection animation
