@@ -835,11 +835,3 @@ void BridgeOnStatusUpdate(PokajanTable *table, int standId, bool online) {
     table->seats[standId].online = online;
     if (online && !wasOnline) BridgeRepublishSeat(table, standId);
 }
-
-bool BridgePollEvent(PokajanTable *table, TableEvent *outEvent) {
-    if (table->eventCount == 0) return false;
-    *outEvent = table->events[table->eventHead];
-    table->eventHead = (table->eventHead + 1) % MAX_EVENTS;
-    table->eventCount--;
-    return true;
-}
