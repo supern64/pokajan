@@ -2,6 +2,7 @@
 #include "scene_game.h"
 #include "scene_manager.h"
 #include "../component/component_char_mini_icon.h"
+#include "../component/component_char_portrait.h"
 #include "../network/bridge.h"
 #include "../utils/text.h"
 #include "../sound/sound.h"
@@ -48,6 +49,7 @@ static void SetupUpdate(void *self) {
             if (s->confirm[playerIdx]) {
                 s->confirm[playerIdx] = false;
                 SoundUnloadCharacterVoiceSlot(playerIdx);
+                CharPortraitUnloadSlot(playerIdx);
             } else {
                 int count = PokajanGetPlayableCount();
                 s->table->seats[playerIdx].member = PokajanLinearOrderToMember(((s->table->seats[playerIdx].member.order + count + 1) % count), true);
@@ -58,6 +60,7 @@ static void SetupUpdate(void *self) {
             // confirm input
             s->confirm[playerIdx] = true;
             SoundLoadCharacterVoiceIntoSlot(s->table->seats[playerIdx].member.id, playerIdx);
+            CharPortraitLoadIntoSlot(s->table->seats[playerIdx].member.id, playerIdx);
             SoundPlayCharacterVoiceFromSlot(playerIdx, SELECTED);
         }
 

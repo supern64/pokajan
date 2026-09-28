@@ -22,6 +22,12 @@ void CharPortraitDrawRaw(int slot, Rectangle from, int x, int y, float scale, fl
     );
 }
 
+void CharPortraitUnloadSlot(int slot) {
+    if (PortraitSlots[slot] == -1) return;
+    UnloadTexture(Portraits[slot]);
+    PortraitSlots[slot] = -1;
+}
+
 void CharPortraitUnloadAllSlots(void) {
     for (int i = 0; i < 4; i++) {
         if (PortraitSlots[i] == -1) continue;
