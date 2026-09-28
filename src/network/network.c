@@ -40,9 +40,17 @@ bool NetworkInit(PokajanTable* table) {
 }
 
 void NetworkLoop() {
-    mosquitto_loop(MosqInstance, 0, 1);
+    static double lastAttempt = 0;
+    int rc = mosquitto_loop(MosqInstance, 0, 1);
 
-    // TODO: reconnect
+    if (rc == MOSQ_ERR_NO_CONN || rc == MOSQ_ERR_CONN_LOST) {
+        double now = GetTime();
+        if (now - lastAttempt >= 2.0) {
+            lastAttempt = now;
+            TraceLog(LOG_WARNING, "MQTT connection lost, reconnecting...");
+            mosquitto_reconnect(MosqInstance); // NetworkOnConnect republishes on success
+        }
+    }
 }
 
 void NetworkShutdown() {
@@ -53,6 +61,11 @@ void NetworkShutdown() {
 
 // callback handlers
 static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode) {
+    if (reasonCode != 0) {
+        TraceLog(LOG_WARNING, TextFormat("MQTT connect refused (%d).", reasonCode));
+        return;
+    }
+
     mosquitto_publish(MosqInstance, NULL, "pokajan/hub/status", 1, "1", 1, true);
     
     char* subTopics[] = {
