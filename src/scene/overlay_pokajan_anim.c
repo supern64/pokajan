@@ -44,6 +44,7 @@ typedef struct {
     float animPlaceScale[4];
     int animBoxOffset;
     int deltaSpeed[4];
+    int initialPlace[4];
     bool newPlace;
 
     int bgAlpha;
@@ -378,7 +379,7 @@ static void PokajanAnimUpdate(void *self) {
                     }
                     if (phase <= 2*PI) {
                         for (int i = 0; i < 4; i++) {
-                            if (s->deltaSpeed[i] == 0) continue;
+                            if (s->animPlace[i] == s->initialPlace[i]) continue;
                             s->animPlaceScale[i] = sinf(phase + PI) / phase + 1.0f;
                         }
                     } else {
@@ -428,6 +429,8 @@ static void PokajanAnimRender(void *self) {
             PokajanAnimDrawCoinWidget("Player 3", s->table->seats[2].member, s->animPlace[2], s->animCoins[2], s->animDelta[2], s->deltaSpeed[2], (Vector2){ 960, 180 - s->animBoxOffset  }, 0, s->overlayAlpha, s->animPlaceScale[2]);
             PokajanAnimDrawCoinWidget("Player 2", s->table->seats[1].member, s->animPlace[1], s->animCoins[1], s->animDelta[1], s->deltaSpeed[1], (Vector2){ 180 - s->animBoxOffset, 540  }, 3, s->overlayAlpha, s->animPlaceScale[1]);
             PokajanAnimDrawCoinWidget("Player 4", s->table->seats[3].member, s->animPlace[3], s->animCoins[3], s->animDelta[3], s->deltaSpeed[3], (Vector2){ 1740 + s->animBoxOffset, 540 }, 1, s->overlayAlpha, s->animPlaceScale[3]);
+            
+            // TODO: matched card display
             break;
         }
     }
@@ -460,15 +463,17 @@ Scene *PokajanAnimCreate(const PokajanTable* table, const TableEvent* event) {
     s->waveTimer = 0;
     s->animBoxOffset = 0;
 
+    PokajanAnimSortPlace(event->coinsBefore, s->initialPlace);
     for (int i = 0; i < 4; i++) {
         s->animCoins[i] = event->coinsBefore[i];
         s->animDelta[i] = event->coinsAfter[i] - event->coinsBefore[i];
         s->deltaSpeed[i] = s->animDelta[i] / 60;
         s->animPlaceScale[i] = 1.0f;
+        s->animPlace[i] = s->initialPlace[i];
     }
     s->newPlace = false;
 
-    PokajanAnimSortPlace(event->coinsBefore, s->animPlace);
+    
 
     s->bgAlpha = 0;
     s->overlayAlpha = 0;
