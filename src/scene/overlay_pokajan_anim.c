@@ -40,6 +40,14 @@ typedef struct {
 
     int animCoins[4];
     int animDelta[4];
+    int animPlace[4];
+    float animPlaceScale[4];
+    int animBoxOffset;
+    int deltaSpeed[4];
+    bool newPlace;
+
+    int bgAlpha;
+    int overlayAlpha;
 } PokajanAnimOverlay;
 
 static void PokajanAnimStart(void *self) {
@@ -50,7 +58,7 @@ static void PokajanAnimStart(void *self) {
 #define COIN_WIDGET_HEIGHT 220
 
 // takes 0, 1, 2, 3 as rotation
-static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member, int place, int coins, int delta, int deltaDir, Vector2 center, int rotation, int widgetAlpha) {
+static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member, int place, int coins, int delta, int deltaDir, Vector2 center, int rotation, int widgetAlpha, float placeScale) {
     float rt = rotation * 90.0f;
     float rtrad = DEG2RAD * rt;
 
@@ -66,12 +74,12 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
             bottomStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2 , COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT - 80 };
             break;
         case 1:
-            topStrip = (Rectangle){ center.y + COIN_WIDGET_HEIGHT / 2 - 80, center.x - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
-            bottomStrip = (Rectangle){center. y - COIN_WIDGET_HEIGHT / 2, center.x - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
+            topStrip = (Rectangle){ center.x + COIN_WIDGET_HEIGHT / 2 - 80, center.y - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
+            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2, center.y - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
             break;
         case 3:
-            topStrip = (Rectangle){ center.y - COIN_WIDGET_HEIGHT / 2, center.x - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
-            bottomStrip = (Rectangle){ center.y - COIN_WIDGET_HEIGHT / 2 + 80, center.x - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
+            topStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2, center.y - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
+            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2 + 80, center.y - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
             break;
         default:
             return;
@@ -106,8 +114,8 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
     DrawTextPro(*GetMainFont(), playerName, tc, ANCHOR_6(pts.x, pts.y, 1.0), rt, 30.0f, 1.0f, ALPHA(GRAY, widgetAlpha));
 
     // place
-    Vector2 pc = Vector2Add(center, Vector2Rotate((Vector2){ -180, 5 }, rtrad));
-    HUDDrawPlace(place, pc.x, pc.y, 0.3f, rt, widgetAlpha);
+    Vector2 pc = Vector2Add(center, Vector2Rotate((Vector2){ -120, 40 }, rtrad));
+    HUDDrawPlace(place, pc.x, pc.y, 0.3f * placeScale, rt, widgetAlpha);
 
     // coin count
     Vector2 ctc = Vector2Add(center, Vector2Rotate((Vector2){ 180, 60 }, rtrad));
@@ -119,7 +127,7 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
     Vector2 cc = Vector2Add(center, Vector2Rotate((Vector2){ 120 - cts.x, 35 }, rtrad));;
     HUDDrawCoin(cc.x, cc.y, 0.25f, rt, widgetAlpha);
 
-    if (deltaDir != 0) {
+    if (delta != 0) {
         // delta
         Vector2 dtc = Vector2Add(center, Vector2Rotate((Vector2){ 60, 5 }, rtrad));
         const char* deltaCount = TextFormat((delta > 0) ? "+%d" : "%d", delta);
@@ -129,22 +137,54 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
     
 }
 
+static void PokajanAnimSortPlace(int coins[4], int outRanks[4]) {
+    int order[4] = {0, 1, 2, 3};
+
+    // Sort player indices by coins descending (simple insertion sort, only 4 elements)
+    for (int i = 1; i < 4; i++) {
+        int key = order[i];
+        int keyCoins = coins[key];
+        int j = i - 1;
+        while (j >= 0 && coins[order[j]] < keyCoins) {
+            order[j + 1] = order[j];
+            j--;
+        }
+        order[j + 1] = key;
+    }
+
+    // Assign ranks, handling ties (equal coins => equal rank)
+    outRanks[order[0]] = 0;
+    for (int i = 1; i < 4; i++) {
+        if (coins[order[i]] == coins[order[i - 1]]) {
+            outRanks[order[i]] = outRanks[order[i - 1]];
+        } else {
+            outRanks[order[i]] = i;
+        }
+    }
+}
+
 static void PokajanAnimUpdate(void *self) {
     PokajanAnimOverlay* s = (PokajanAnimOverlay*)self;
     int p = s->pokajanEvent.standId;
 
+    if (GetPokajanPressed()) SceneManagerPop(); // TODO: remove
+
     switch (s->phase) {
         case POPOUT: {
             // subphase 0 - pop in, subphase 1 - fade out
-            if (s->subphase == 0 && s->subphaseTimer == 0) {
+            if (s->subphase == 0 && s->subphaseTimer == 0) { // first run
                 SoundPlaySFX(SFX_DECLARE_1);
                 SoundPlayCharacterVoiceFromSlot(p, GetRandomValue(0, 1) ? CV_POKAJAN_1 : CV_POKAJAN_2);
             }
 
             if (s->subphase == 0) {
                 s->waveTimer += MAX((80 - s->subphaseTimer) / 20, 1); // should get slower as subphaseTimer increases
+                s->overlayAlpha = MIN(s->subphaseTimer * 12, 255);
+                s->bgAlpha = MIN(s->subphaseTimer * 4, 80);
             } else {
                 s->waveTimer += 1;
+                s->overlayAlpha = MAX(255 - s->subphaseTimer * 24, 0);
+                s->bgAlpha = MAX(80 - s->subphaseTimer * 8, 0);
             }
 
             if (s->subphase == 0 && s->subphaseTimer == 80) {
@@ -288,20 +328,80 @@ static void PokajanAnimUpdate(void *self) {
             break;
         }
         case DISPLAY_CHANGE:
-            // subphase 0 - fade and slide player widget in, subphase 1 - animate coin transfer, subphase 2 - animate place, subphase 3 - fade out
-            if (GetPokajanPressed()) SceneManagerPop();
-            if (GetSkipPressed()) s->waveTimer = (s->waveTimer + 1) % 4;
-            /*
-            if (s->subphase == 0 && s->subphaseTimer == 80) {
-                s->subphase = 1;
-                s->subphaseTimer = 0;
-            } else if (s->subphase == 1 && s->subphaseTimer == 200) {
-                s->subphase = 2;
-                s->subphaseTimer = 0;
-            } else if (s->subphase == 2 && s->subphaseTimer == 10) {
-                SceneManagerPop();
+            // subphase 0 - fade and slide player widget in, subphase 1 - animate coin transfer, subphase 3 - animate place, subphase 4 - fade out
+            switch (s->subphase) {
+                case 0:
+                    s->overlayAlpha = MIN(s->subphaseTimer * 18, 255);
+                    s->bgAlpha = MIN(s->subphaseTimer * 8, 128);
+                    s->animBoxOffset = MAX(200 - log2(s->subphaseTimer) * 34, 0);
+                    if (s->subphaseTimer == 80) { // 80
+                        s->subphase = 1;
+                        s->subphaseTimer = 0;
+                    }
+                    break;
+                case 1: {
+                    bool allZero = true;
+                    for (int i = 0; i < 4; i++) {
+                        // all deltas are a multiple of 30, so ONLY use factors of 30
+                        if (s->animDelta[i] != 0) {
+                            s->animDelta[i] -= s->deltaSpeed[i];
+                            s->animCoins[i] += s->deltaSpeed[i];
+
+                            if ((s->animDelta[i] > 0 && s->deltaSpeed[i] < 0) || (s->animDelta[i] < 0 && s->deltaSpeed[i] > 0)) {
+                                s->animDelta[i] = 0;
+                                s->animCoins[i] = s->pokajanEvent.coinsAfter[i];
+                            } else {
+                                allZero = false;
+                            }   
+                        }
+                    }
+                    if (allZero) {
+                        s->subphase = 2;
+                        s->subphaseTimer = 0;
+                    } else if (s->subphaseTimer % 3 == 0) {
+                        SoundPlaySFX(SFX_COIN);
+                    }
+                    break;
+                }
+                case 2:
+                    if (s->subphaseTimer == 20) {
+                        s->subphase = 3;
+                        s->subphaseTimer = 0;
+                    }
+                    break;
+                case 3: {
+                    float phase = (s->subphaseTimer / 3.0f + 1);
+
+                    if (!s->newPlace && phase >= PI - 1) {
+                        PokajanAnimSortPlace(s->pokajanEvent.coinsAfter, s->animPlace);
+                        s->newPlace = true;
+                    }
+                    if (phase <= 2*PI) {
+                        for (int i = 0; i < 4; i++) {
+                            if (s->deltaSpeed[i] == 0) continue;
+                            s->animPlaceScale[i] = sinf(phase + PI) / phase + 1.0f;
+                        }
+                    } else {
+                        for (int i = 0; i < 4; i++) {
+                            s->animPlaceScale[i] = 1.0f;
+                        }
+                    }               
+                    
+                    if (s->subphaseTimer == 90) {
+                        s->subphase = 4;
+                        s->subphaseTimer = 0;
+                    }
+                    break;
+                }
+                case 4:
+                    s->overlayAlpha = MAX(255 - s->subphaseTimer * 24, 0);
+                    s->bgAlpha =  MAX(128 - s->subphaseTimer * 8, 0);
+                    if (s->subphaseTimer == 10) {
+                        SceneManagerPop();
+                        return;
+                    }
+                    break;
             }
-            */
             break;
     }
     s->phaseTimer += 1;
@@ -310,29 +410,24 @@ static void PokajanAnimUpdate(void *self) {
 
 static void PokajanAnimRender(void *self) {
     PokajanAnimOverlay* s = (PokajanAnimOverlay*)self;
-
-    
     switch (s->phase) {
         case POPOUT: {
-            int overlayAlpha = (s->subphase == 0) ? MIN(s->subphaseTimer * 12, 255) : MAX(255 - s->subphaseTimer * 24, 0);
-            int bgAlpha = (s->subphase == 0) ? MIN(s->subphaseTimer * 4, 80) : MAX(80 - s->subphaseTimer * 8, 0);
-
-            DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, bgAlpha } );
+            DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, s->bgAlpha } );
             DrawTextureRec(
                s->fgElements.texture,
                (Rectangle){ 0, 0, s->fgElements.texture.width, -s->fgElements.texture.height },
                (Vector2){ 0, 0 },
-               WHITE_ALPHA(overlayAlpha)
+               WHITE_ALPHA(s->overlayAlpha)
             );
             break;
         }
         case DISPLAY_CHANGE: {
-            const TableEvent* ev = &s->pokajanEvent;
-            int overlayAlpha = (s->subphase == 0) ? MIN(s->subphaseTimer * 18, 255) : MAX(255 - s->subphaseTimer * 24, 0);
-            int bgAlpha = (s->subphase == 0) ? MIN(s->subphaseTimer * 8, 128) : MAX(128 - s->subphaseTimer * 8, 0);
-            DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, bgAlpha } );
+            DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, s->bgAlpha } );
 
-            PokajanAnimDrawCoinWidget("Player 1", s->table->seats[2].member, 0, 1970, -120, -1, (Vector2){ 400, 400 }, s->waveTimer, overlayAlpha);
+            PokajanAnimDrawCoinWidget("Player 1", s->table->seats[0].member, s->animPlace[0], s->animCoins[0], s->animDelta[0], s->deltaSpeed[0], (Vector2){ 960, 900 + s->animBoxOffset  }, 2, s->overlayAlpha, s->animPlaceScale[0]);
+            PokajanAnimDrawCoinWidget("Player 3", s->table->seats[2].member, s->animPlace[2], s->animCoins[2], s->animDelta[2], s->deltaSpeed[2], (Vector2){ 960, 180 - s->animBoxOffset  }, 0, s->overlayAlpha, s->animPlaceScale[2]);
+            PokajanAnimDrawCoinWidget("Player 2", s->table->seats[1].member, s->animPlace[1], s->animCoins[1], s->animDelta[1], s->deltaSpeed[1], (Vector2){ 180 - s->animBoxOffset, 540  }, 3, s->overlayAlpha, s->animPlaceScale[1]);
+            PokajanAnimDrawCoinWidget("Player 4", s->table->seats[3].member, s->animPlace[3], s->animCoins[3], s->animDelta[3], s->deltaSpeed[3], (Vector2){ 1740 + s->animBoxOffset, 540 }, 1, s->overlayAlpha, s->animPlaceScale[3]);
             break;
         }
     }
@@ -358,16 +453,25 @@ Scene *PokajanAnimCreate(const PokajanTable* table, const TableEvent* event) {
     s->pokajanEvent = *event;
     s->table = table;
 
-    s->phase = DISPLAY_CHANGE;//POPOUT;
+    s->phase = POPOUT;
     s->subphase = 0;
     s->phaseTimer = 0;
     s->subphaseTimer = 0;
     s->waveTimer = 0;
+    s->animBoxOffset = 0;
 
     for (int i = 0; i < 4; i++) {
-        s->animCoins[i] = 0;
-        s->animDelta[i] = 0;
+        s->animCoins[i] = event->coinsBefore[i];
+        s->animDelta[i] = event->coinsAfter[i] - event->coinsBefore[i];
+        s->deltaSpeed[i] = s->animDelta[i] / 60;
+        s->animPlaceScale[i] = 1.0f;
     }
+    s->newPlace = false;
+
+    PokajanAnimSortPlace(event->coinsBefore, s->animPlace);
+
+    s->bgAlpha = 0;
+    s->overlayAlpha = 0;
 
     s->fgElements = LoadRenderTexture(SCREEN_W, SCREEN_H);
     s->pokajanLogo = LoadRenderTexture(1355, 661);
