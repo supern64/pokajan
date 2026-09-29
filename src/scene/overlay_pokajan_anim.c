@@ -39,12 +39,17 @@ static void PokajanAnimStart(void *self) {
 
 }
 
+static void PokajanAnimDrawCoinWidget(MemberSlot member, int coins, int delta, int x, int y) {
+
+}
+
 static void PokajanAnimUpdate(void *self) {
     PokajanAnimOverlay* s = (PokajanAnimOverlay*)self;
     int p = s->pokajanEvent.standId;
 
     switch (s->phase) {
         case POPOUT: {
+            // subphase 0 - pop in, subphase 1 - fade out
             if (s->subphase == 0 && s->subphaseTimer == 0) {
                 SoundPlaySFX(SFX_DECLARE_1);
                 SoundPlayCharacterVoiceFromSlot(p, GetRandomValue(0, 1) ? CV_POKAJAN_1 : CV_POKAJAN_2);
@@ -103,7 +108,7 @@ static void PokajanAnimUpdate(void *self) {
                     CharPortraitDrawRaw(
                         p, 
                         (Rectangle){ 0, 0, 1024, 450 },
-                        1300, 880 + 300 * bounce,
+                        1370, 730 + MIN(s->phaseTimer*s->phaseTimer, 150),// 880,
                         1.4f,
                         180.0f,
                         WHITE
@@ -111,48 +116,102 @@ static void PokajanAnimUpdate(void *self) {
                     DrawTexturePro(
                         s->pokajanLogo.texture,
                         (Rectangle){ 0, 0, s->pokajanLogo.texture.width, -s->pokajanLogo.texture.height },
-                        RECT_SCALE(660, 780, s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.55f),
+                        RECT_SCALE(710, 780, s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.55f),
                         ANCHOR_5(s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.55f),
                         180.0f,
                         WHITE
                     );
                     break;
-                /*
                 case 2:
                     for (i = 0; i < 12; i++) {
-                        DrawEllipse(i * 300 - s->waveTimer * 4, offset / 1.5 - 200, WAVE_WIDTH, WAVE_HEIGHT, POKAJAN_DARK_BLUE);
+                        DrawEllipse(i * 300 - s->waveTimer * 4, 0, WAVE_WIDTH, WAVE_HEIGHT_H, sec);
                     }
                     for (i = 0; i < 12; i++) {
-                        DrawEllipse((i - 2) * 300 + s->waveTimer * 4, offset / 2 - 200, WAVE_WIDTH, WAVE_HEIGHT, POKAJAN_LIGHT_BLUE);
+                        DrawEllipse((i - 2) * 300 + s->waveTimer * 4, 0, WAVE_WIDTH, WAVE_HEIGHT_L, pri);
                     }
                     
-                    HUDDrawPokajanLogo(960, 90, 0.5f, 0.0f);
+                    CharPortraitDrawRaw(
+                        p, 
+                        (Rectangle){ 0, 0, 1024, 450 },
+                        550, 350 - MIN(s->phaseTimer*s->phaseTimer, 150),// 880,
+                        1.4f,
+                        0.0f,
+                        WHITE
+                    );
+                    DrawTexturePro(
+                        s->pokajanLogo.texture,
+                        (Rectangle){ 0, 0, s->pokajanLogo.texture.width, -s->pokajanLogo.texture.height },
+                        RECT_SCALE(1210, 300, s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.55f),
+                        ANCHOR_5(s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.55f),
+                        0.0f,
+                        WHITE
+                    );
                     break;
                 case 1:
                     for (i = 0; i < 7; i++) {
-                        DrawEllipse(offset / 1.5 - 200, i * 300 - s->waveTimer * 4, WAVE_HEIGHT, WAVE_WIDTH, POKAJAN_DARK_BLUE);
+                        DrawEllipse(0, i * 300 - s->waveTimer * 4, WAVE_HEIGHT_H, WAVE_WIDTH, sec);
                     }
                     for (i = 0; i < 7; i++) {
-                        DrawEllipse(offset / 2 - 200, (i - 2) * 300 + s->waveTimer * 4, WAVE_HEIGHT, WAVE_WIDTH, POKAJAN_LIGHT_BLUE);
+                        DrawEllipse(0, (i - 2) * 300 + s->waveTimer * 4, WAVE_HEIGHT_L, WAVE_WIDTH, pri);
                     }
-                    HUDDrawPokajanLogo(90, 540, 0.5f, 270.0f);
+
+                    CharPortraitDrawRaw(
+                        p, 
+                        (Rectangle){ 0, 0, 1024, 450 },
+                        350 - MIN(s->phaseTimer*s->phaseTimer, 150), 290,
+                        1.2f,
+                        270.0f,
+                        WHITE
+                    );
+                    DrawTexturePro(
+                        s->pokajanLogo.texture,
+                        (Rectangle){ 0, 0, s->pokajanLogo.texture.width, -s->pokajanLogo.texture.height },
+                        RECT_SCALE(300, 690, s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.35f),
+                        ANCHOR_5(s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.35f),
+                        270.0f,
+                        WHITE
+                    );
                     break;
                 case 3:
                     for (i = 0; i < 7; i++) {
-                        DrawEllipse(2120 - offset / 1.5, i * 300 - s->waveTimer * 4, WAVE_HEIGHT, WAVE_WIDTH, POKAJAN_DARK_BLUE);
+                        DrawEllipse(1920, i * 300 - s->waveTimer * 4, WAVE_HEIGHT_H, WAVE_WIDTH, sec);
                     }
                     for (i = 0; i < 7; i++) {
-                        DrawEllipse(2120 - offset / 2, (i - 2) * 300 + s->waveTimer * 4, WAVE_HEIGHT, WAVE_WIDTH, POKAJAN_LIGHT_BLUE);
+                        DrawEllipse(1920, (i - 2) * 300 + s->waveTimer * 4, WAVE_HEIGHT_L, WAVE_WIDTH, pri);
                     }
-                    HUDDrawPokajanLogo(2010, 540, 0.5f, 90.0f);
+                    
+                    CharPortraitDrawRaw(
+                        p, 
+                        (Rectangle){ 0, 0, 1024, 450 },
+                        1570 + MIN(s->phaseTimer*s->phaseTimer, 150), 790,
+                        1.2f,
+                        90.0f,
+                        WHITE
+                    );
+                    DrawTexturePro(
+                        s->pokajanLogo.texture,
+                        (Rectangle){ 0, 0, s->pokajanLogo.texture.width, -s->pokajanLogo.texture.height },
+                        RECT_SCALE(1620, 390, s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.35f),
+                        ANCHOR_5(s->pokajanLogo.texture.width, s->pokajanLogo.texture.height, 0.5*bounce + 0.35f),
+                        90.0f,
+                        WHITE
+                    );
                     break;
-                */
             }
             EndTextureMode();
             break;
         }
         case DISPLAY_CHANGE:
-            SceneManagerPop();
+            // subphase 0 - fade and slide player widget in, subphase 1 - animate coin transfer, subphase 2 - fade out
+            if (s->subphase == 0 && s->subphaseTimer == 80) {
+                s->subphase = 1;
+                s->subphaseTimer = 0;
+            } else if (s->subphase == 1 && s->subphaseTimer == 150) {
+                s->subphase = 2;
+                s->subphaseTimer = 0;
+            } else if (s->subphase == 2 && s->subphaseTimer == 10) {
+                SceneManagerPop();
+            }
             break;
     }
     s->phaseTimer += 1;
