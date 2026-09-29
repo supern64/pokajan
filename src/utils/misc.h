@@ -4,6 +4,7 @@
 #define TABLE_BLEND (Color){ 0, 0, 0, 64 }
 #define POKAJAN_DARK_BLUE (Color){ 32, 152, 255, 255 }
 #define POKAJAN_LIGHT_BLUE (Color){ 199, 241, 255, 255 }
+#define POKAJAN_RED (Color){ 255, 55, 61, 255 }
 #define WHITE_ALPHA(a_) (Color){ 255, 255, 255, (a_) }
 #define ALPHA(color_, alpha_) (Color){ (color_).r, (color_).g, (color_).b, (alpha_) }
 
