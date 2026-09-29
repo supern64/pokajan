@@ -1,5 +1,4 @@
 #include "component_hud.h"
-#include "component_char_mini_icon.h"
 #include <raylib.h>
 #include <raymath.h>
 #include <rlgl.h>
@@ -79,43 +78,27 @@ void HUDDrawGenIndicator(Generation generation, int x, int y, float scale, float
     );
 }
 
-void HUDDrawGenIndicators(Generation generations[4]) {
-    int slot = 0;
-    for (slot = 0; slot < 2; slot++) {
-        HUDDrawGenIndicator(generations[slot], 240, 325 + slot * 240, 1.0, 0.0);
-        HUDDrawGenIndicator(generations[slot], (GENERATION_MEMBER_COUNT[generations[slot]] == 4 ? 760 : 800), 515 + slot * 240, 1.0, 180.0);
-	}
-
-	for (slot = 0; slot < 2; slot++) {
-		HUDDrawGenIndicator(generations[slot+2], 840, 325 + slot * 240, 1.0, 0.0);
-        HUDDrawGenIndicator(generations[slot+2], (GENERATION_MEMBER_COUNT[generations[slot+2]] == 4 ? 1360 : 1400), 515 + slot * 240, 1.0, 180.0);
-	}
-}
-
-// per player info display
-
-static void HUDDrawCoin(int x, int y, float scale, float rotation) {
+void HUDDrawCoin(int x, int y, float scale, float rotation, int alpha) {
     DrawTexturePro(
         GameAtlas,
         (Rectangle){ 1, 1, 202, 200 },
         RECT_SCALE(x, y, 202, 200, scale),
         ANCHOR_7,
         rotation,
-        WHITE
+        WHITE_ALPHA(alpha)
     );
 }
 
-static void HUDDrawCoinNumber(int coins, int x, int y, float rotation) {
+void HUDDrawCoinNumber(int coins, int x, int y, float rotation, Color color) {
     if (coins > 9999) coins = 9999;
     if (coins < -999) coins = -999;
     char coinText[5];
     snprintf(coinText, 5, "%d", coins);
     Vector2 size = MeasureTextEx(*GetFocusFont(), coinText, 50, 1.0);
-    DrawTextPro(*GetFocusFont(), coinText, (Vector2){ x, y }, ANCHOR_6(size.x, size.y, 1), rotation, 50, 1.0, WHITE);
+    DrawTextPro(*GetFocusFont(), coinText, (Vector2){ x, y }, ANCHOR_6(size.x, size.y, 1), rotation, 50, 1.0, color);
 }
 
-// 0 - 1st place, 3 - 4th place
-static void HUDDrawPlace(int place, int x, int y, float scale, float rotation) {
+void HUDDrawPlace(int place, int x, int y, float scale, float rotation, int alpha) {
     Rectangle atlasLocation;
     switch (place) {
         case 0:
@@ -138,11 +121,11 @@ static void HUDDrawPlace(int place, int x, int y, float scale, float rotation) {
         RECT_SCALE(x, y, atlasLocation.width, atlasLocation.height, scale),
         ANCHOR_7,
         rotation,
-        WHITE
+        WHITE_ALPHA(alpha)
     );
 }
 
-static void HUDCalculatePlayerRank(Player players[4], int outRanks[4]) {
+void HUDCalculatePlayerRank(Player players[4], int outRanks[4]) {
     int order[4] = {0, 1, 2, 3};
 
     // Sort player indices by coins descending (simple insertion sort, only 4 elements)
@@ -168,19 +151,7 @@ static void HUDCalculatePlayerRank(Player players[4], int outRanks[4]) {
     }
 }
 
-static const Vector2 SCREEN_CENTER = { SCREEN_W / 2.0f, SCREEN_H / 2.0f };
-
-static const Vector2 widgetOffset = { 160, 428 };
-static const Vector2 sideMultiplier = { 2, 1 };
-
-// --- Fixed internal layout, relative to each widget's own circle center ---
-static const Vector2 rectOffset       = { -234, 2 };   // rect CENTER offset (w=300,h=100)
-static const Vector2 coinOffset       = { -114, 22 };
-static const Vector2 coinNumberOffset = { -264, 3 };
-static const Vector2 placeOffset      = { -284, 37 };
-static const float   REF_ROTATION     = 180.0f;
-
-static void HUDDrawRectangleRoundedRotated(Rectangle rec, float roundness, int segments, float rotation, Color color) {
+void HUDDrawRectangleRoundedRotated(Rectangle rec, float roundness, int segments, float rotation, Color color) {
     // rec.x/rec.y here should be the rectangle's CENTER, not top-left
     rlPushMatrix();
         rlTranslatef(rec.x, rec.y, 0.0f);
@@ -192,38 +163,14 @@ static void HUDDrawRectangleRoundedRotated(Rectangle rec, float roundness, int s
     rlPopMatrix();
 }
 
-static void HUDDrawPlayerWidget(Vector2 circleCenter, float rotation, MemberSlot member, int coins, int rank, bool isTurn) {
-    float rad = DEG2RAD * (rotation - REF_ROTATION);
+void HUDDrawRectangleRoundedLineRotated(Rectangle rec, float roundness, int segments, float rotation, float lineThick, Color color) {
+    rlPushMatrix();
+        rlTranslatef(rec.x, rec.y, 0.0f);
+        rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
 
-    Vector2 rc = Vector2Add(circleCenter, Vector2Rotate(rectOffset, rad));
-    Vector2 cc = Vector2Add(circleCenter, Vector2Rotate(coinOffset, rad));
-    Vector2 nc = Vector2Add(circleCenter, Vector2Rotate(coinNumberOffset, rad));
-    Vector2 pc = Vector2Add(circleCenter, Vector2Rotate(placeOffset, rad));
-
-    CharMiniIconDrawRaw(member.generation, member.slot, circleCenter.x, circleCenter.y, 1.0f, rotation);
-    if (isTurn) DrawRing(circleCenter, 64, 74, 0, 360, 30, YELLOW);
-
-    // rc is the rect's CENTER (matches DrawRectangleRoundedRotated's expectation)
-    HUDDrawRectangleRoundedRotated((Rectangle){ rc.x, rc.y, 300, 100 }, 1.5f, 30, rotation, TABLE_BLEND);
-
-    HUDDrawCoin(cc.x, cc.y, 0.2f, rotation);
-    HUDDrawCoinNumber(coins, nc.x, nc.y, rotation);
-    HUDDrawPlace(rank, pc.x, pc.y, 0.2f, rotation);
-}
-
-void HUDDrawSeats(PokajanTable* table) {
-    int ranks[4];
-    HUDCalculatePlayerRank(table->game.players, ranks);
-
-    Vector2 p1Center = Vector2Add(SCREEN_CENTER, widgetOffset);
-    Vector2 p3Center = Vector2Subtract(SCREEN_CENTER, widgetOffset);
-    Vector2 p2Center = Vector2Add(SCREEN_CENTER, Vector2Multiply(Vector2Rotate(widgetOffset, DEG2RAD * 90), sideMultiplier));
-    Vector2 p4Center = Vector2Add(SCREEN_CENTER, Vector2Multiply(Vector2Rotate(widgetOffset, DEG2RAD * -90), sideMultiplier));
-
-    HUDDrawPlayerWidget(p1Center, 180.0f, table->seats[0].member, table->game.players[0].coins, ranks[0], table->game.turnIndex == 0);
-    HUDDrawPlayerWidget(p2Center, 270.0f, table->seats[1].member, table->game.players[1].coins, ranks[1], table->game.turnIndex == 1);
-    HUDDrawPlayerWidget(p3Center,   0.0f, table->seats[2].member, table->game.players[2].coins, ranks[2], table->game.turnIndex == 2);
-    HUDDrawPlayerWidget(p4Center,  90.0f, table->seats[3].member, table->game.players[3].coins, ranks[3], table->game.turnIndex == 3);
+        Rectangle localRec = { -rec.width / 2, -rec.height / 2, rec.width, rec.height };
+        DrawRectangleRoundedLinesEx(localRec, roundness, segments, lineThick, color);
+    rlPopMatrix();
 }
 
 void HUDDrawPokajanLogo(int x, int y, float scale, float rotation, Color tint) {

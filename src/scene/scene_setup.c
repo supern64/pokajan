@@ -119,7 +119,7 @@ static void SetupRender(void *self) {
             DrawRectangleRounded((Rectangle){ 750, 900, 420, 220 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "OK!", 90, 1.0f);
             DrawTextPro(*f, "OK!", (Vector2){ 800, 990 }, ANCHOR_4(size.x, size.y, 1.0), 0.0f, 90, 1.0f, WHITE);
-            CharMiniIconDrawRaw(s->table->seats[0].member.generation, s->table->seats[0].member.slot, 1050, 990, 1.0f, 0.0f);
+            CharMiniIconDrawRaw(s->table->seats[0].member.generation, s->table->seats[0].member.slot, 1050, 990, 1.0f, 0.0f, 255);
         } else {
             DrawRectangleRounded((Rectangle){ 600, 900, 720, 220 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "P1", 90, 1.0f);
@@ -130,7 +130,7 @@ static void SetupRender(void *self) {
             for (int i = s->table->seats[0].member.order - 1; i <= s->table->seats[0].member.order + 2; i++) {
                 int fOrder = (i + count - (s->memSlideAnimTimer[0] == 0 ? 0 : 1)) % count;
                 MemberSlot mem = PokajanLinearOrderToMember(fOrder, true);
-                CharMiniIconDrawRaw(mem.generation, mem.slot, 900 + 150 * j - s->memSlideAnimTimer[0], 990, 1.0f, 0.0f);
+                CharMiniIconDrawRaw(mem.generation, mem.slot, 900 + 150 * j - s->memSlideAnimTimer[0], 990, 1.0f, 0.0f, 255);
                 j++;
             }
             EndScissorMode();
@@ -146,7 +146,7 @@ static void SetupRender(void *self) {
             DrawRectangleRounded((Rectangle){ -40, 330, 220, 420 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "OK!", 90, 1.0f);
             DrawTextPro(*f, "OK!", (Vector2){ 90, 380 }, ANCHOR_4(size.x, size.y, 1.0), 90.0f, 90, 1.0f, WHITE);
-            CharMiniIconDrawRaw(s->table->seats[1].member.generation, s->table->seats[1].member.slot, 90, 630, 1.0f, 90.0f);
+            CharMiniIconDrawRaw(s->table->seats[1].member.generation, s->table->seats[1].member.slot, 90, 630, 1.0f, 90.0f, 255);
         } else {
             DrawRectangleRounded((Rectangle){ -40, 180, 220, 720 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "P2", 90, 1.0f);
@@ -157,7 +157,7 @@ static void SetupRender(void *self) {
             for (int i = s->table->seats[1].member.order - 1; i <= s->table->seats[1].member.order + 2; i++) {
                 int fOrder = (i + count - (s->memSlideAnimTimer[1] == 0 ? 0 : 1)) % count;
                 MemberSlot mem = PokajanLinearOrderToMember(fOrder, true);
-                CharMiniIconDrawRaw(mem.generation, mem.slot, 90, 480 + 150 * j - s->memSlideAnimTimer[1], 1.0f, 90.0f);
+                CharMiniIconDrawRaw(mem.generation, mem.slot, 90, 480 + 150 * j - s->memSlideAnimTimer[1], 1.0f, 90.0f, 255);
                 j++;
             }
             EndScissorMode();
@@ -173,7 +173,7 @@ static void SetupRender(void *self) {
             DrawRectangleRounded((Rectangle){ 750, -40, 420, 220 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "OK!", 90, 1.0f);
             DrawTextPro(*f, "OK!", (Vector2){ 1120, 90 }, ANCHOR_4(size.x, size.y, 1.0), 180.0f, 90, 1.0f, WHITE);
-            CharMiniIconDrawRaw(s->table->seats[2].member.generation, s->table->seats[2].member.slot, 870, 90, 1.0f, 180.0f);
+            CharMiniIconDrawRaw(s->table->seats[2].member.generation, s->table->seats[2].member.slot, 870, 90, 1.0f, 180.0f, 255);
         } else {
             DrawRectangleRounded((Rectangle){ 600, -40, 720, 220 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "P3", 90, 1.0f);
@@ -184,7 +184,7 @@ static void SetupRender(void *self) {
             for (int i = s->table->seats[2].member.order - 1; i <= s->table->seats[2].member.order + 2; i++) {
                 int fOrder = (i + count - (s->memSlideAnimTimer[2] == 0 ? 0 : 1)) % count;
                 MemberSlot mem = PokajanLinearOrderToMember(fOrder, true);
-                CharMiniIconDrawRaw(mem.generation, mem.slot, 1020 - 150 * j + s->memSlideAnimTimer[2], 90, 1.0f, 180.0f);
+                CharMiniIconDrawRaw(mem.generation, mem.slot, 1020 - 150 * j + s->memSlideAnimTimer[2], 90, 1.0f, 180.0f, 255);
                 j++;
             }
             EndScissorMode();
@@ -200,7 +200,7 @@ static void SetupRender(void *self) {
             DrawRectangleRounded((Rectangle){ 1740, 330, 220, 420 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "OK!", 90, 1.0f);
             DrawTextPro(*f, "OK!", (Vector2){ 1830, 700 }, ANCHOR_4(size.x, size.y, 1.0), 270.0f, 90, 1.0f, WHITE);
-            CharMiniIconDrawRaw(s->table->seats[3].member.generation, s->table->seats[3].member.slot, 1830, 450, 1.0f, 270.0f);
+            CharMiniIconDrawRaw(s->table->seats[3].member.generation, s->table->seats[3].member.slot, 1830, 450, 1.0f, 270.0f, 255);
         } else {
             DrawRectangleRounded((Rectangle){ 1740, 180, 220, 720 }, 0.3f, 20, TABLE_BLEND);
             size = MeasureTextEx(*f, "P4", 90, 1.0f);
@@ -211,7 +211,7 @@ static void SetupRender(void *self) {
             for (int i = s->table->seats[3].member.order - 1; i <= s->table->seats[3].member.order + 2; i++) {
                 int fOrder = (i + count - (s->memSlideAnimTimer[3] == 0 ? 0 : 1)) % count;
                 MemberSlot mem = PokajanLinearOrderToMember(fOrder, true);
-                CharMiniIconDrawRaw(mem.generation, mem.slot, 1830, 600 - 150 * j + s->memSlideAnimTimer[3], 1.0f, 270.0f);
+                CharMiniIconDrawRaw(mem.generation, mem.slot, 1830, 600 - 150 * j + s->memSlideAnimTimer[3], 1.0f, 270.0f, 255);
                 j++;
             }
             EndScissorMode();

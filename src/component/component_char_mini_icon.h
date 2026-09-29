@@ -4,7 +4,7 @@
 #include "../pokajan_core/cards.h"
 
 void CharMiniIconLoad(void);
-void CharMiniIconDrawRaw(Generation generation, int memSlot, int x, int y, float scale, float rotation);
+void CharMiniIconDrawRaw(Generation generation, int memSlot, int x, int y, float scale, float rotation, int alpha);
 void CharMiniIconUnload(void);
 
 #endif

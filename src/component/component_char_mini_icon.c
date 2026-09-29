@@ -12,7 +12,7 @@ void CharMiniIconLoad(void) {
 }
 
 // anchor is centered for easier rotation
-void CharMiniIconDrawRaw(Generation generation, int memSlot, int x, int y, float scale, float rotation) {
+void CharMiniIconDrawRaw(Generation generation, int memSlot, int x, int y, float scale, float rotation, int alpha) {
     Rectangle atlasLocation = (Rectangle){ memSlot * 128, generation * 128, 128, 128 };
     Rectangle finalLocation = (Rectangle){ x, y, 128 * scale, 128 * scale };
     DrawTexturePro(
@@ -21,7 +21,7 @@ void CharMiniIconDrawRaw(Generation generation, int memSlot, int x, int y, float
         finalLocation,
         ANCHOR_5(128, 128, scale),
         rotation,
-        WHITE
+        WHITE_ALPHA(alpha)
     );
 }
 
