@@ -90,10 +90,10 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
 
     // box
     BeginScissorMode(bottomStrip.x, bottomStrip.y, bottomStrip.width, bottomStrip.height);
-        HUDDrawRectangleRoundedRotated(widget, 0.5f, 30, rt, (Color){ 235, 235, 235, widgetAlpha * 0.85f });
+        HUDDrawRectangleRoundedRotated(widget, 0.5f, 12, rt, (Color){ 235, 235, 235, widgetAlpha * 0.85f });
     EndScissorMode();
     BeginScissorMode(topStrip.x, topStrip.y, topStrip.width, topStrip.height);
-        HUDDrawRectangleRoundedRotated(widget, 0.5f, 30, rt, (Color){ 235, 235, 235, widgetAlpha });
+        HUDDrawRectangleRoundedRotated(widget, 0.5f, 12, rt, (Color){ 235, 235, 235, widgetAlpha });
     EndScissorMode();
 
     Color outlineColor = (Color){ 235, 235, 235, widgetAlpha };
@@ -103,7 +103,7 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
         outlineColor = ALPHA(POKAJAN_RED, widgetAlpha);
     }
     // outline
-    HUDDrawRectangleRoundedLineRotated(widget, 0.5f, 30, rt, 8.0f, outlineColor);
+    HUDDrawRectangleRoundedLineRotated(widget, 0.5f, 12, rt, 8.0f, outlineColor);
 
     // miniicon
     Vector2 ic = Vector2Add(center, Vector2Rotate((Vector2){ 120, -70 }, rtrad));
@@ -467,7 +467,7 @@ Scene *PokajanAnimCreate(const PokajanTable* table, const TableEvent* event) {
     for (int i = 0; i < 4; i++) {
         s->animCoins[i] = event->coinsBefore[i];
         s->animDelta[i] = event->coinsAfter[i] - event->coinsBefore[i];
-        s->deltaSpeed[i] = s->animDelta[i] / 60;
+        s->deltaSpeed[i] = (s->animDelta[i] < 0) ? MIN(s->animDelta[i] / 60, -1) : MAX(s->animDelta[i] / 60, 1);
         s->animPlaceScale[i] = 1.0f;
         s->animPlace[i] = s->initialPlace[i];
     }
