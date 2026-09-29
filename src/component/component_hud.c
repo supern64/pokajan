@@ -119,7 +119,7 @@ void HUDDrawPlace(int place, int x, int y, float scale, float rotation, int alph
         GameAtlas,
         atlasLocation,
         RECT_SCALE(x, y, atlasLocation.width, atlasLocation.height, scale),
-        ANCHOR_7,
+        ANCHOR_5(atlasLocation.width, atlasLocation.height, scale),
         rotation,
         WHITE_ALPHA(alpha)
     );

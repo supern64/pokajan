@@ -106,7 +106,7 @@ static const Vector2 sideMultiplier = { 2, 1 };
 static const Vector2 rectOffset       = { -234, 2 };   // rect CENTER offset (w=300,h=100)
 static const Vector2 coinOffset       = { -114, 22 };
 static const Vector2 coinNumberOffset = { -264, 3 };
-static const Vector2 placeOffset      = { -284, 37 };
+static const Vector2 placeOffset      = { -314, 5 };
 static const float   REF_ROTATION     = 180.0f;
 
 // draw player widgets
@@ -162,7 +162,6 @@ static void GameUpdate(void *self) {
 	GameScene *s = (GameScene *)self;
 	if (s->cardSpacing < GEN_MAX_WIDTH) s->cardSpacing += 20;
 
-	/* TODO: complete
 	TableEvent event;
 	while (BridgePollEvent(s->table, &event)) {
 		switch (event.type) {
@@ -176,13 +175,12 @@ static void GameUpdate(void *self) {
 				SoundPlaySFX(SFX_DISCARD_AVAILABLE);
 				break;
 			case EVENT_POKAJAN:
-				// handle in overlay
+				SceneManagerPush(PokajanAnimCreate(s->table, &event));
 				break;
 			default:
 				break;
 		}
 	}
-		*/
 
 	#ifdef F_DEBUG
 		uint8_t p = GetPokajanPressed();
