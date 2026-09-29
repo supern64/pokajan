@@ -15,8 +15,6 @@ static LoopData BGMLoopData;
 static AudioStream BGMAudioStream;
 
 static Sound SFX[10];
-static Sound SFXCoinAlias[10];
-static int CurrentCoinSoundSlot = 0;
 
 static Sound CharacterVoices[4][3];
 static int CharacterVoicesSlot[4] = { -1, -1, -1, -1 };
@@ -77,28 +75,13 @@ void SoundLoadSFX(void) {
     SFX[SFX_OUT_OF_COINS] = LoadSound("assets/sfx/end_drained.wav");
     SFX[SFX_OUT_OF_CARDS] = LoadSound("assets/sfx/end_nocards.wav");
     SFX[SFX_HIGHLIGHT_WINNER] = LoadSound("assets/sfx/end_winner.wav");
-
-    // create sound aliases for coin
-    for (int i = 0; i < 10; i++) {
-        SFXCoinAlias[i] = LoadSoundAlias(SFX[SFX_COIN]);
-    }
 }
 
 void SoundPlaySFX(SoundEffect sfx) {
     PlaySound(SFX[sfx]);
 }
 
-void SoundPlaySFXCoin(int count) {
-    for (int i = 0; i < count; i++) {
-        PlaySound(SFXCoinAlias[CurrentCoinSoundSlot++]);
-        if (CurrentCoinSoundSlot > 9) CurrentCoinSoundSlot = 0;
-    }
-}
-
 void SoundUnloadSFX(void) {
-    for (int i = 0; i < 10; i++) {
-        UnloadSoundAlias(SFXCoinAlias[i]);
-    }
     for (int i = 0; i < 10; i++) {
         UnloadSound(SFX[i]);
     }
