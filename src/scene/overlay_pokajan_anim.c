@@ -202,6 +202,8 @@ static void PokajanAnimUpdate(void *self) {
             break;
         }
         case DISPLAY_CHANGE:
+            SceneManagerPop();
+            /*
             // subphase 0 - fade and slide player widget in, subphase 1 - animate coin transfer, subphase 2 - fade out
             if (s->subphase == 0 && s->subphaseTimer == 80) {
                 s->subphase = 1;
@@ -212,6 +214,7 @@ static void PokajanAnimUpdate(void *self) {
             } else if (s->subphase == 2 && s->subphaseTimer == 10) {
                 SceneManagerPop();
             }
+                */
             break;
     }
     s->phaseTimer += 1;
