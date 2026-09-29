@@ -6,7 +6,7 @@
 static Texture2D CharMiniIconAtlas;
 
 void CharMiniIconLoad(void) {
-    CharMiniIconAtlas = LoadTexture("assets/char_mini_icon_atlas.png");
+    CharMiniIconAtlas = LoadTexture("assets/char_mini_icon_atlas.qoi");
     GenTextureMipmaps(&CharMiniIconAtlas);
     SetTextureFilter(CharMiniIconAtlas, TEXTURE_FILTER_BILINEAR);
 }

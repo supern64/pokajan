@@ -12,7 +12,7 @@
 static Texture2D GameAtlas;
 
 void HUDLoad(void) {
-    GameAtlas = LoadTexture("assets/game_atlas.png");
+    GameAtlas = LoadTexture("assets/game_atlas.qoi");
     GenTextureMipmaps(&GameAtlas);
     SetTextureFilter(GameAtlas, TEXTURE_FILTER_BILINEAR);
 }

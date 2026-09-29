@@ -9,49 +9,49 @@ static Generation SlotMapping[GENERATION_COUNT] = { -1, -1, -1, -1, -1, -1, -1, 
 static void CardLoadGeneration(Generation g, int slot) {
     switch (g) {
         case GEN_0:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen0.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen0.qoi");
             break;
         case GEN_1:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen1.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen1.qoi");
             break;
         case GEN_2:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen2.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen2.qoi");
             break;
         case GAMERS:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gamers.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gamers.qoi");
             break;
         case GEN_3:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen3.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen3.qoi");
             break;
         case GEN_4:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen4.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen4.qoi");
             break;
         case GEN_5:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen5.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/gen5.qoi");
             break;
         case HOLOX:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/holox.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/holox.qoi");
             break;
         case MYTH:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/myth.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/myth.qoi");
             break;
         case PROMISE:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/promise.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/promise.qoi");
             break;
         case ADVENT:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/advent.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/advent.qoi");
             break;
         case ID_GEN_1:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/id1.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/id1.qoi");
             break;
         case ID_GEN_2:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/id2.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/id2.qoi");
             break;
         case ID_GEN_3:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/id3.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/id3.qoi");
             break;
         case REGLOSS:
-            CardAtlas[slot] = LoadTexture("assets/card_atlas/regloss.png");
+            CardAtlas[slot] = LoadTexture("assets/card_atlas/regloss.qoi");
             break;
     }
     GenTextureMipmaps(&CardAtlas[slot]);

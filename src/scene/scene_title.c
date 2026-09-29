@@ -43,8 +43,8 @@ static void TitleInit(void *self) {
 	s->bgLogoPosition = 0;
 	s->bgLogoSpeed = 1;
 
-	PokajanLogo = LoadTexture("assets/misc/pokajan_popup.png");
-	PokajanShadeLogo = LoadTexture("assets/misc/pokajan_text_hz_outline.png");
+	PokajanLogo = LoadTexture("assets/misc/pokajan_popup.qoi");
+	PokajanShadeLogo = LoadTexture("assets/misc/pokajan_text_hz_outline.qoi");
 }
 
 static void TitleStart(void *self) {

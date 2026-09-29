@@ -7,7 +7,7 @@ static int PortraitSlots[4] = { -1, -1, -1, -1 };
 
 void CharPortraitLoadIntoSlot(int memberId, int slot) {
     if (PortraitSlots[slot] != -1) return;
-    Portraits[slot] = LoadTexture(TextFormat("assets/char_portrait/img_chr_full_2d_%05d.png", memberId));
+    Portraits[slot] = LoadTexture(TextFormat("assets/char_portrait/img_chr_full_2d_%05d.qoi", memberId));
     if (Portraits[slot].width != 0) {
         PortraitSlots[slot] = memberId;
         GenTextureMipmaps(&Portraits[slot]);
