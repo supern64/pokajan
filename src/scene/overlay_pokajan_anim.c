@@ -8,12 +8,11 @@
 #include "../component/component_hud.h"
 #include "../component/component_char_mini_icon.h"
 #include "../component/component_char_portrait.h"
+#include "../component/component_card.h"
 #include "../network/bridge.h"
 #include "../sound/sound.h"
 #include "../utils/misc.h"
 #include "../utils/text.h"
-
-#include "../utils/input.h" // TODO remove
 
 #define WAVE_WIDTH 300
 #define WAVE_HEIGHT_H 200
@@ -52,7 +51,7 @@ typedef struct {
 } PokajanAnimOverlay;
 
 static void PokajanAnimStart(void *self) {
-
+    (void)self;
 }
 
 #define COIN_WIDGET_WIDTH 400
@@ -64,7 +63,6 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
     float rtrad = DEG2RAD * rt;
 
     Rectangle topStrip, bottomStrip;
-
     switch (rotation) {
         case 0:
             topStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2, COIN_WIDGET_WIDTH, 80 };
@@ -135,10 +133,35 @@ static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member,
         Vector2 dts = MeasureTextEx(*GetFocusFont(), deltaCount, 60.0f, 1.0f);
         DrawTextPro(*GetFocusFont(), deltaCount, dtc, ANCHOR_6(dts.x, dts.y, 1.0), rt, 60.0f, 1.0f, outlineColor);
     }
-    
 }
 
-static void PokajanAnimSortPlace(int coins[4], int outRanks[4]) {
+static void PokajanAnimDrawMatch(const Match* match, const Card* discard, Vector2 topLeft, int rotation, int alpha) {
+    float rt = rotation * 90.0f;
+    float rtrad = DEG2RAD * rt;
+
+    // match type
+    const char* matchType = (match->pattern == THREE_OF_A_KIND) ? "3-Card" : GENERATION_NAME[match->matchInHand[0].generation]; // this is safe since discards cannot make a match on its own
+    Vector2 mts = MeasureTextEx(*GetMainFont(), matchType, 30.0f, 1.0f);
+    DrawTextPro(*GetMainFont(), matchType, topLeft, ANCHOR_7, rt, 30.0f, 1.0f, WHITE_ALPHA(alpha));
+
+    // rewards
+    const char* reward = TextFormat("%d", match->reward);
+    Vector2 ret = Vector2Add(topLeft, Vector2Rotate((Vector2){ mts.x + 20, -mts.y/2 }, rtrad));
+    DrawTextPro(*GetFocusFont(), reward, ret, ANCHOR_7, rt, 55.0f, 2.0f, ALPHA(POKAJAN_DARK_BLUE, alpha));
+
+    // matched cards
+    int cards = (match->pattern) == THREE_OF_A_KIND ? 3 : GENERATION_MEMBER_COUNT[match->matchInHand[0].generation];
+    for (int i = 0; i < (cards - (match->useDiscardOf != -1)); i++) {
+        Vector2 cc = Vector2Add(topLeft, Vector2Rotate((Vector2){ i * 116, mts.y + 15 }, rtrad));
+        CardDraw(match->matchInHand[i], cc.x, cc.y, 0.45f, rt, alpha);
+    }
+    if (match->useDiscardOf != -1) {
+        Vector2 cc = Vector2Add(topLeft, Vector2Rotate((Vector2){ (cards - 1) * 116, mts.y + 15 }, rtrad));
+        CardDraw(*discard, cc.x, cc.y, 0.45f, rt, alpha);
+    }
+}
+
+static void PokajanAnimSortPlace(const int coins[4], int outRanks[4]) {
     int order[4] = {0, 1, 2, 3};
 
     // Sort player indices by coins descending (simple insertion sort, only 4 elements)
@@ -167,8 +190,6 @@ static void PokajanAnimSortPlace(int coins[4], int outRanks[4]) {
 static void PokajanAnimUpdate(void *self) {
     PokajanAnimOverlay* s = (PokajanAnimOverlay*)self;
     int p = s->pokajanEvent.standId;
-
-    if (GetPokajanPressed()) SceneManagerPop(); // TODO: remove
 
     switch (s->phase) {
         case POPOUT: {
@@ -333,7 +354,7 @@ static void PokajanAnimUpdate(void *self) {
             switch (s->subphase) {
                 case 0:
                     s->overlayAlpha = MIN(s->subphaseTimer * 18, 255);
-                    s->bgAlpha = MIN(s->subphaseTimer * 8, 128);
+                    s->bgAlpha = MIN(s->subphaseTimer * 8, 164);
                     s->animBoxOffset = MAX(200 - log2(s->subphaseTimer) * 34, 0);
                     if (s->subphaseTimer == 80) { // 80
                         s->subphase = 1;
@@ -396,7 +417,7 @@ static void PokajanAnimUpdate(void *self) {
                 }
                 case 4:
                     s->overlayAlpha = MAX(255 - s->subphaseTimer * 24, 0);
-                    s->bgAlpha =  MAX(128 - s->subphaseTimer * 8, 0);
+                    s->bgAlpha =  MAX(164 - s->subphaseTimer * 8, 0);
                     if (s->subphaseTimer == 10) {
                         SceneManagerPop();
                         return;
@@ -430,7 +451,26 @@ static void PokajanAnimRender(void *self) {
             PokajanAnimDrawCoinWidget("Player 2", s->table->seats[1].member, s->animPlace[1], s->animCoins[1], s->animDelta[1], s->deltaSpeed[1], (Vector2){ 180 - s->animBoxOffset, 540  }, 3, s->overlayAlpha, s->animPlaceScale[1]);
             PokajanAnimDrawCoinWidget("Player 4", s->table->seats[3].member, s->animPlace[3], s->animCoins[3], s->animDelta[3], s->deltaSpeed[3], (Vector2){ 1740 + s->animBoxOffset, 540 }, 1, s->overlayAlpha, s->animPlaceScale[3]);
             
-            // TODO: matched card display
+            Vector2 matchLoc;
+            int rt = (s->pokajanEvent.standId + 2) % 4;
+            switch (s->pokajanEvent.standId) {
+                case 0:
+                    matchLoc = (Vector2){ 960 + COIN_WIDGET_WIDTH / 2, 900 + s->animBoxOffset - (COIN_WIDGET_HEIGHT / 2 + 30) };
+                    break;
+                case 2:
+                    matchLoc = (Vector2){ 960 - COIN_WIDGET_WIDTH / 2, 180 - s->animBoxOffset + (COIN_WIDGET_HEIGHT / 2 + 30) };
+                    break;
+                case 1:
+                    matchLoc = (Vector2){ 180 - s->animBoxOffset + (COIN_WIDGET_HEIGHT / 2 + 30), 540 + COIN_WIDGET_WIDTH / 2 };
+                    break;
+                case 3:
+                    matchLoc = (Vector2){ 1740 + s->animBoxOffset - (COIN_WIDGET_HEIGHT / 2 + 30), 540 - COIN_WIDGET_WIDTH / 2 };
+                    break;
+                default:
+                    matchLoc = (Vector2){ 0, 0 };
+                    break;
+            }
+            PokajanAnimDrawMatch(&s->pokajanEvent.match, &s->pokajanEvent.borrowed, matchLoc, rt, s->overlayAlpha);
             break;
         }
     }
@@ -467,13 +507,11 @@ Scene *PokajanAnimCreate(const PokajanTable* table, const TableEvent* event) {
     for (int i = 0; i < 4; i++) {
         s->animCoins[i] = event->coinsBefore[i];
         s->animDelta[i] = event->coinsAfter[i] - event->coinsBefore[i];
-        s->deltaSpeed[i] = (s->animDelta[i] < 0) ? MIN(s->animDelta[i] / 60, -1) : MAX(s->animDelta[i] / 60, 1);
+        s->deltaSpeed[i] = (s->animDelta[i] == 0) ? 0 : ((s->animDelta[i] < 0) ? MIN(s->animDelta[i] / 60, -1) : MAX(s->animDelta[i] / 60, 1));
         s->animPlaceScale[i] = 1.0f;
         s->animPlace[i] = s->initialPlace[i];
     }
     s->newPlace = false;
-
-    
 
     s->bgAlpha = 0;
     s->overlayAlpha = 0;
