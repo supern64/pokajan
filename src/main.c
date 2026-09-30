@@ -28,6 +28,7 @@ int main(void) {
 
 	InitWindow(1920, 1080, "Pokajan!");
 	InitAudioDevice();
+	SetTargetFPS(60);
 
 	// load specific assets that are used throughout the whole game
 	SoundLoadBGM();
@@ -36,13 +37,7 @@ int main(void) {
 	CharMiniIconLoad();
 	HUDLoad();
 
-	#ifdef F_SKIP_TO_GAME
-		SceneManagerInit(GameCreate(table));
-	#else
-		SceneManagerInit(TitleCreate(table));
-	#endif
-
-	SetTargetFPS(60);
+	SceneManagerInit(TitleCreate(table));
 
 	while (!WindowShouldClose()) {
 		NetworkLoop();

@@ -14,11 +14,6 @@
 #define MIN(a_,b_) ((a_)<(b_)?(a_):(b_))
 #define MAX(a_,b_) ((a_)>(b_)?(a_):(b_))
 
-// flags
-#define F_DEBUG_FIXTURES
-#define F_SKIP_TO_GAME
-#define F_DEBUG
-
 // anchor macros, refer to numpad
 
 #define ANCHOR_7 (Vector2){ 0, 0 }
