@@ -68,6 +68,8 @@ void CardLoad(Generation gen_array[4]) {
 void CardUnload(void) {
     for (int i = 0; i < 4; i++) {
         UnloadTexture(CardAtlas[i]);
+    }
+    for (int i = 0; i < GENERATION_COUNT; i++) {
         SlotMapping[i] = -1;
     }
 }
