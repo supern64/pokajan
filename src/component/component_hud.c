@@ -125,7 +125,7 @@ void HUDDrawPlace(int place, int x, int y, float scale, float rotation, int alph
     );
 }
 
-void HUDCalculatePlayerRank(Player players[4], int outRanks[4]) {
+void HUDCalculatePlayerRank(const Player players[4], int outRanks[4]) {
     int order[4] = {0, 1, 2, 3};
 
     // Sort player indices by coins descending (simple insertion sort, only 4 elements)
