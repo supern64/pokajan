@@ -72,16 +72,16 @@ void CardUnload(void) {
     }
 }
 
-void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float scale) {
+void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float scale, float rotation, int alpha) {
     // all cards are 256x363
     int texX = variant * 256;
     int texY = memIndex * 363;
     Rectangle atlasLocation = { texX, texY, 256, 363 };
     Rectangle finalLocation = { x, y, 256 * scale, 363 * scale };
-    DrawTexturePro(CardAtlas[slot], atlasLocation, finalLocation, ANCHOR_7, 0.0, WHITE);
+    DrawTexturePro(CardAtlas[slot], atlasLocation, finalLocation, ANCHOR_7, rotation, WHITE_ALPHA(alpha));
 }
 
-void CardDraw(Card card, int x, int y, float scale) {
+void CardDraw(const Card card, int x, int y, float scale, float rotation, int alpha) {
     if (IS_EMPTY_CARD(card)) return;
     if (SlotMapping[card.generation] == -1) {
         TraceLog(LOG_WARNING, TextFormat("Attempted to render unloaded generation %d\n", card.generation));
@@ -95,5 +95,5 @@ void CardDraw(Card card, int x, int y, float scale) {
             return;
         }
     }
-    CardDrawRaw(SlotMapping[card.generation], memIndex, card.variant, x, y, scale);
+    CardDrawRaw(SlotMapping[card.generation], memIndex, card.variant, x, y, scale, rotation, alpha);
 }

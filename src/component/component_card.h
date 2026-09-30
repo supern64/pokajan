@@ -10,9 +10,9 @@ void CardLoad(Generation gen_array[4]);
 void CardUnload();
 
 // Draws a specific card to the screen.
-void CardDraw(Card card, int x, int y, float scale);
+void CardDraw(const Card card, int x, int y, float scale, float rotation, int alpha);
 
 // Draws a specific card to the screen.
-void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float scale);
+void CardDrawRaw(int slot, int memIndex, Variant variant, int x, int y, float scale, float rotation, int alpha);
 
 #endif
