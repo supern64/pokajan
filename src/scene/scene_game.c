@@ -24,78 +24,8 @@ typedef struct {
 	PokajanTable* table;
 
 	float cardSpacing;
+	double lastMismatch;
 } GameScene;
-
-// TODO: remove these after i finish making the animation
-#ifdef F_DEBUG
-// Applies a payment the same way the engine does: payer clamps at 0, receiver gets the full amount.
-static void GameFakePay(TableEvent *event, int from, int to, int amount) {
-	event->coinsAfter[from] -= amount;
-	if (event->coinsAfter[from] < 0) event->coinsAfter[from] = 0;
-	event->coinsAfter[to] += amount;
-}
-
-// Builds a plausible EVENT_POKAJAN from the current table without touching it.
-static TableEvent GameFakePokajanEvent(PokajanTable *table, int standId, bool fromDiscard) {
-	Game *g = &table->game;
-
-	TableEvent event = { 0 };
-	event.type = EVENT_POKAJAN;
-	event.standId = standId;
-	event.fromDiscardOf = -1;
-	event.card = EMPTY_CARD;
-	event.borrowed = EMPTY_CARD;
-	event.match = EMPTY_MATCH;
-	for (int i = 0; i < 4; i++) {
-		event.coinsBefore[i] = event.coinsAfter[i] = g->players[i].coins;
-	}
-
-	Match *m = &event.match;
-	m->playerIndex = standId;
-	m->complete = true;
-
-	if (!fromDiscard) {
-		// three of a kind, all pink, first member of the first generation
-		Generation gen = g->generations[0];
-		Card c = { .id = GENERATIONS[gen][0], .generation = gen, .variant = V_PINK };
-
-		m->pattern = THREE_OF_A_KIND;
-		m->colorState = SAME;
-		m->useDiscardOf = -1;
-		for (int i = 0; i < 3; i++) m->matchInHand[i] = c;
-		m->reward = 840 + (IS_SAME_MEMBER(c, g->bonusCard) ? 3 * 90 : 0);
-
-		for (int i = 0; i < 4; i++) {
-			if (i != standId) GameFakePay(&event, i, standId, m->reward / 3);
-		}
-	} else {
-		// full generation, colors cycling blue/pink/orange, last member taken from the discard
-		Generation gen = g->generations[1];
-		int count = GENERATION_MEMBER_COUNT[gen];
-		int discarder = (standId + 3) % 4; // player before, as in real play
-		int bonus = 0;
-
-		m->pattern = FULL_GENERATION;
-		m->colorState = DIFFERENT;
-		m->useDiscardOf = discarder;
-
-		for (int i = 0; i < count; i++) {
-			Card c = { .id = GENERATIONS[gen][i], .generation = gen, .variant = (Variant)(i % 3) };
-			if (IS_SAME_MEMBER(c, g->bonusCard)) bonus += 90;
-			if (i < count - 1) m->matchInHand[i] = c;
-			else event.borrowed = c;
-		}
-
-		int base = (count == 3) ? 180 : (count == 4) ? 300 : 480;
-		m->reward = base + bonus;
-		event.fromDiscardOf = discarder;
-
-		GameFakePay(&event, discarder, standId, m->reward);
-	}
-
-	return event;
-}
-#endif
 
 // location of widgets around the table
 static const Vector2 SCREEN_CENTER = { SCREEN_W / 2.0f, SCREEN_H / 2.0f };
@@ -129,7 +59,7 @@ static void GameDrawPlayerTableWidget(Vector2 circleCenter, float rotation, Memb
     HUDDrawPlace(rank, pc.x, pc.y, 0.2f, rotation, 255);
 }
 
-static void GameDrawSeats(PokajanTable* table) {
+static void GameDrawSeats(const PokajanTable* table) {
     int ranks[4];
     HUDCalculatePlayerRank(table->game.players, ranks);
 
@@ -144,9 +74,37 @@ static void GameDrawSeats(PokajanTable* table) {
     GameDrawPlayerTableWidget(p4Center,  90.0f, table->seats[3].member, table->game.players[3].coins, ranks[3], table->game.turnIndex == 3);
 }
 
+static void GameDrawMismatch(const PokajanTable* table) {
+	DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, 230 });
+
+	const char* text = "Please check the cards lit red on your stand.";
+    Vector2 textSize = MeasureTextEx(*GetFocusFont(), text, 50.0f, 1.0f);
+	for (int i = 0; i < 4; i++) {
+		if (!table->seats[i].mismatch) continue;
+		Vector2 coords = (Vector2){ 0, 0 };
+		switch (i) {
+			case 0:
+				coords = (Vector2){ 960, 980 };
+				break;
+			case 2:
+				coords = (Vector2){ 960, 100 };
+				break;
+			case 1:
+				coords = (Vector2){ 100, 540 };
+				break;
+			case 3:
+				coords = (Vector2){ 1820, 540 };
+				break;
+
+		}
+    	DrawTextPro(*GetFocusFont(), text, coords, ANCHOR_5(textSize.x, textSize.y, 1.0), i * 90.0f, 50.0f, 1.0f, WHITE);
+	}
+}
+
 static void GameInit(void *self) {
 	GameScene *s = (GameScene *)self;
 	s->cardSpacing = 0;
+	s->lastMismatch = 0.0;
 
 	CardLoad(s->table->game.generations);
 	SoundEnsureCharacterVoiceLoaded();
@@ -155,7 +113,7 @@ static void GameInit(void *self) {
 
 static void GameStart(void *self) {
 	GameScene *s = (GameScene *)self;
-	// SceneManagerPush(CardInstructionsCreate(s->table)); // TODO: add back in
+	//SceneManagerPush(CardInstructionsCreate(s->table));
 }
 
 static void GameUpdate(void *self) {
@@ -182,17 +140,11 @@ static void GameUpdate(void *self) {
 		}
 	}
 
-	#ifdef F_DEBUG
-		uint8_t p = GetPokajanPressed();
-		const uint8_t seatBits[4] = { P1, P2, P3, P4 };
-		for (int i = 0; i < 4; i++) {
-			if (p & seatBits[i]) {
-				TableEvent fake = GameFakePokajanEvent(s->table, i, IsKeyDown(KEY_LEFT_SHIFT));
-				SceneManagerPush(PokajanAnimCreate(s->table, &fake));
-				break;
-			}
-		}
-	#endif
+	if (s->table->anyMismatch && s->lastMismatch == -1) {
+		s->lastMismatch = GetTime();
+	} else if (!s->table->anyMismatch) {
+		s->lastMismatch = -1;
+	}
 }
 
 static void GameRender(void *self) {
@@ -206,36 +158,54 @@ static void GameRender(void *self) {
 		int memCount = GENERATION_MEMBER_COUNT[s->table->game.generations[slot]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
-			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 310 + slot * 240, 0.6);
+			CardDrawRaw(slot, mem, V_DISPLAY, 260 + spacePerMem * mem, 310 + slot * 240, 0.6f, 0.0f, 255);
 		}
 	}
 	for (int slot = 0; slot < 2; slot++) {
 		int memCount = GENERATION_MEMBER_COUNT[s->table->game.generations[slot + 2]];
 		float spacePerMem = (float)(memCount == 4 ? s->cardSpacing - 40 : s->cardSpacing) / (memCount - 1);
 		for (int mem = 0; mem < memCount; mem++) {
-			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 310 + slot * 240, 0.6);
+			CardDrawRaw(slot + 2, mem, V_DISPLAY, 860 + spacePerMem * mem, 310 + slot * 240, 0.6f, 0.0f, 255);
 		}
 	}
 		
 	// gen indicator
 	if (s->cardSpacing >= GEN_MAX_WIDTH) {
 		for (int slot = 0; slot < 2; slot++) {
-			HUDDrawGenIndicator(s->table->game.generations[slot], 240, 325 + slot * 240, 1.0, 0.0);
-			HUDDrawGenIndicator(s->table->game.generations[slot], (GENERATION_MEMBER_COUNT[s->table->game.generations[slot]] == 4 ? 760 : 800), 515 + slot * 240, 1.0, 180.0);
+			HUDDrawGenIndicator(s->table->game.generations[slot], 240, 325 + slot * 240, 1.0f, 0.0f);
+			HUDDrawGenIndicator(s->table->game.generations[slot], (GENERATION_MEMBER_COUNT[s->table->game.generations[slot]] == 4 ? 760 : 800), 515 + slot * 240, 1.0f, 180.0f);
 		}
 		for (int slot = 0; slot < 2; slot++) {
-			HUDDrawGenIndicator(s->table->game.generations[slot+2], 840, 325 + slot * 240, 1.0, 0.0);
-			HUDDrawGenIndicator(s->table->game.generations[slot+2], (GENERATION_MEMBER_COUNT[s->table->game.generations[slot+2]] == 4 ? 1360 : 1400), 515 + slot * 240, 1.0, 180.0);
+			HUDDrawGenIndicator(s->table->game.generations[slot+2], 840, 325 + slot * 240, 1.0f, 0.0f);
+			HUDDrawGenIndicator(s->table->game.generations[slot+2], (GENERATION_MEMBER_COUNT[s->table->game.generations[slot+2]] == 4 ? 1360 : 1400), 515 + slot * 240, 1.0f, 180.0f);
 		}
 	}
 
 	// bonus card
-	CardDraw(s->table->game.bonusCard, 1440, 380, 0.9);
+	CardDraw(s->table->game.bonusCard, 1440, 380, 0.9, 0.0f, 255);
 	DrawFocusTextUpsideDown("BONUS", (Vector2){ 1455, 335 }, 70, TABLE_BLEND);
 	DrawFocusText("BONUS", (Vector2){ 1455, 715 }, 70, TABLE_BLEND);
 
 	// seat widgets
 	GameDrawSeats(s->table);
+
+	if (s->lastMismatch != -1) { // any mismatch
+		bool isAnyUnexplained = false;
+		for (int p = 0; p < 4; p++) {
+			if (!s->table->seats[p].mismatch) continue;
+			for (int sl = 0; sl < 9; sl++) {
+				if (s->table->seats[p].slotState[sl] == SLOT_UNEXPECTED) {
+					isAnyUnexplained = true;
+					break;
+				}
+			}
+			if (isAnyUnexplained) break;
+		}
+
+		if (isAnyUnexplained || (GetTime() - s->lastMismatch > 5.0)) {
+			GameDrawMismatch(s->table);
+		}
+	}
 }
 
 static void GameDestroy(void *self) {
