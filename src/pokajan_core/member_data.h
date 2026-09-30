@@ -189,6 +189,7 @@ static const Color MEMBER_COLORS[GENERATION_COUNT][5][2] = {
 };
 
 static const int GENERATION_MEMBER_COUNT[GENERATION_COUNT] = { 5, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 3, 3, 3, 5 };
+static const char *GENERATION_NAME[] = { "Gen 0", "Gen 1", "Gen 2", "GAMERS", "Gen 3", "Gen 4", "Gen 5", "holoX", "Myth", "Promise", "Advent", "ID Gen 1", "ID Gen 2", "ID Gen 3", "ReGLOSS" };
 
 // Gets the index of a member of a generation from their ID. Returns -1 if member is not part of generation.
 int PokajanGetMemberSlot(Generation generation, int id);

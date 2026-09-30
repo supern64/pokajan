@@ -14,8 +14,6 @@ typedef struct {
 	PokajanTable* table;
 } CardInstructionsOverlay;
 
-static const char *GENERATION_NAME[] = { "Gen 0", "Gen 1", "Gen 2", "GAMERS", "Gen 3", "Gen 4", "Gen 5", "holoX", "Myth", "Promise", "Advent", "ID Gen 1", "ID Gen 2", "ID Gen 3", "ReGLOSS" };
-
 static void CardInstructionsStart(void *self) {
 	(void)self;
 }
