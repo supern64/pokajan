@@ -677,6 +677,7 @@ void BridgeInitTable(PokajanTable *table) {
     for (int s = 0; s < 4; s++) table->seats[s].online = online[s];
 
     for (int s = 0; s < 4; s++) {
+        table->seats[s].member = TOKINO_SORA;
         for (int i = 0; i < 9; i++) {
             table->seats[s].observedCard[i] = table->seats[s].shadowCard[i] = EMPTY_CARD;
             SET_CARD_ID(table->seats[s].observed[i], EMPTY_CARD_ID);
