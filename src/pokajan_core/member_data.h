@@ -30,8 +30,8 @@ typedef struct {
 	int slot;
 } MemberSlot;
 
-#define TOKINO_SORA (MemberSlot){ 0, 1, 0, 0 };
-#define EMPTY_MEMBER_SLOT (MemberSlot){ .order = -1, .id = -1, .generation = -1, .slot = -1 };
+#define TOKINO_SORA (MemberSlot){ 0, 1, 0, 0 }
+#define EMPTY_MEMBER_SLOT (MemberSlot){ .order = -1, .id = -1, .generation = -1, .slot = -1 }
 #define IS_EMPTY_MEMBER_SLOT(mem_) ((mem_).order == -1)
 
 // -1 indicates an empty slot.

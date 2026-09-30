@@ -501,7 +501,7 @@ Scene *PokajanAnimCreate(const PokajanTable* table, const TableEvent* event) {
     s->phaseTimer = 0;
     s->subphaseTimer = 0;
     s->waveTimer = 0;
-    s->animBoxOffset = 0;
+    s->animBoxOffset = 200;
 
     PokajanAnimSortPlace(event->coinsBefore, s->initialPlace);
     for (int i = 0; i < 4; i++) {
