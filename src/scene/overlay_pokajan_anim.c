@@ -54,87 +54,6 @@ static void PokajanAnimStart(void *self) {
     (void)self;
 }
 
-#define COIN_WIDGET_WIDTH 400
-#define COIN_WIDGET_HEIGHT 220
-
-// takes 0, 1, 2, 3 as rotation
-static void PokajanAnimDrawCoinWidget(const char* playerName, MemberSlot member, int place, int coins, int delta, int deltaDir, Vector2 center, int rotation, int widgetAlpha, float placeScale) {
-    float rt = rotation * 90.0f;
-    float rtrad = DEG2RAD * rt;
-
-    Rectangle topStrip, bottomStrip;
-    switch (rotation) {
-        case 0:
-            topStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2, COIN_WIDGET_WIDTH, 80 };
-            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2 + 80, COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT - 80 };
-            break;
-        case 2:
-            topStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y + COIN_WIDGET_HEIGHT / 2 - 80, COIN_WIDGET_WIDTH, 80 };
-            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2 , COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT - 80 };
-            break;
-        case 1:
-            topStrip = (Rectangle){ center.x + COIN_WIDGET_HEIGHT / 2 - 80, center.y - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
-            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2, center.y - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
-            break;
-        case 3:
-            topStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2, center.y - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
-            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2 + 80, center.y - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
-            break;
-        default:
-            return;
-    }
-
-    Rectangle widget = (Rectangle){ center.x, center.y, COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT };
-
-    // box
-    BeginScissorMode(bottomStrip.x, bottomStrip.y, bottomStrip.width, bottomStrip.height);
-        HUDDrawRectangleRoundedRotated(widget, 0.5f, 12, rt, (Color){ 235, 235, 235, widgetAlpha * 0.85f });
-    EndScissorMode();
-    BeginScissorMode(topStrip.x, topStrip.y, topStrip.width, topStrip.height);
-        HUDDrawRectangleRoundedRotated(widget, 0.5f, 12, rt, (Color){ 235, 235, 235, widgetAlpha });
-    EndScissorMode();
-
-    Color outlineColor = (Color){ 235, 235, 235, widgetAlpha };
-    if (deltaDir > 0) {
-        outlineColor = ALPHA(POKAJAN_DARK_BLUE, widgetAlpha);
-    } else if (deltaDir < 0) {
-        outlineColor = ALPHA(POKAJAN_RED, widgetAlpha);
-    }
-    // outline
-    HUDDrawRectangleRoundedLineRotated(widget, 0.5f, 12, rt, 8.0f, outlineColor);
-
-    // miniicon
-    Vector2 ic = Vector2Add(center, Vector2Rotate((Vector2){ 120, -70 }, rtrad));
-    CharMiniIconDrawRaw(member.generation, member.slot, ic.x, ic.y, 1.0f, rt, widgetAlpha);
-
-    // playername
-    Vector2 tc = Vector2Add(center, Vector2Rotate((Vector2){ 40, -70 }, rtrad));
-    Vector2 pts = MeasureTextEx(*GetMainFont(), playerName, 30.0f, 1.0f);
-    DrawTextPro(*GetMainFont(), playerName, tc, ANCHOR_6(pts.x, pts.y, 1.0), rt, 30.0f, 1.0f, ALPHA(GRAY, widgetAlpha));
-
-    // place
-    Vector2 pc = Vector2Add(center, Vector2Rotate((Vector2){ -120, 40 }, rtrad));
-    HUDDrawPlace(place, pc.x, pc.y, 0.3f * placeScale, rt, widgetAlpha);
-
-    // coin count
-    Vector2 ctc = Vector2Add(center, Vector2Rotate((Vector2){ 180, 60 }, rtrad));
-    const char* coinCount = TextFormat("%d", coins);
-    Vector2 cts = MeasureTextEx(*GetFocusFont(), coinCount, 80.0f, 1.0f);
-    DrawTextPro(*GetFocusFont(), coinCount, ctc, ANCHOR_6(cts.x, cts.y, 1.0), rt, 80.0f, 1.0f, ALPHA(GRAY, widgetAlpha));
-
-    // coin icon
-    Vector2 cc = Vector2Add(center, Vector2Rotate((Vector2){ 120 - cts.x, 35 }, rtrad));;
-    HUDDrawCoin(cc.x, cc.y, 0.25f, rt, widgetAlpha);
-
-    if (delta != 0) {
-        // delta
-        Vector2 dtc = Vector2Add(center, Vector2Rotate((Vector2){ 60, 5 }, rtrad));
-        const char* deltaCount = TextFormat((delta > 0) ? "+%d" : "%d", delta);
-        Vector2 dts = MeasureTextEx(*GetFocusFont(), deltaCount, 60.0f, 1.0f);
-        DrawTextPro(*GetFocusFont(), deltaCount, dtc, ANCHOR_6(dts.x, dts.y, 1.0), rt, 60.0f, 1.0f, outlineColor);
-    }
-}
-
 static void PokajanAnimDrawMatch(const Match* match, const Card* discard, Vector2 topLeft, int rotation, int alpha) {
     float rt = rotation * 90.0f;
     float rtrad = DEG2RAD * rt;
@@ -446,11 +365,11 @@ static void PokajanAnimRender(void *self) {
         case DISPLAY_CHANGE: {
             DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, s->bgAlpha } );
 
-            PokajanAnimDrawCoinWidget("Player 1", s->table->seats[0].member, s->animPlace[0], s->animCoins[0], s->animDelta[0], s->deltaSpeed[0], (Vector2){ 960, 900 + s->animBoxOffset  }, 2, s->overlayAlpha, s->animPlaceScale[0]);
-            PokajanAnimDrawCoinWidget("Player 3", s->table->seats[2].member, s->animPlace[2], s->animCoins[2], s->animDelta[2], s->deltaSpeed[2], (Vector2){ 960, 180 - s->animBoxOffset  }, 0, s->overlayAlpha, s->animPlaceScale[2]);
-            PokajanAnimDrawCoinWidget("Player 2", s->table->seats[1].member, s->animPlace[1], s->animCoins[1], s->animDelta[1], s->deltaSpeed[1], (Vector2){ 180 - s->animBoxOffset, 540  }, 3, s->overlayAlpha, s->animPlaceScale[1]);
-            PokajanAnimDrawCoinWidget("Player 4", s->table->seats[3].member, s->animPlace[3], s->animCoins[3], s->animDelta[3], s->deltaSpeed[3], (Vector2){ 1740 + s->animBoxOffset, 540 }, 1, s->overlayAlpha, s->animPlaceScale[3]);
-            
+            HUDDrawCoinWidgetWithDelta("Player 1", s->table->seats[0].member, s->animPlace[0], s->animCoins[0], s->animDelta[0], s->deltaSpeed[0], (Vector2){ 960, 900 + s->animBoxOffset  }, 2, s->overlayAlpha, s->animPlaceScale[0]);
+            HUDDrawCoinWidgetWithDelta("Player 3", s->table->seats[2].member, s->animPlace[2], s->animCoins[2], s->animDelta[2], s->deltaSpeed[2], (Vector2){ 960, 180 - s->animBoxOffset  }, 0, s->overlayAlpha, s->animPlaceScale[2]);
+            HUDDrawCoinWidgetWithDelta("Player 2", s->table->seats[1].member, s->animPlace[1], s->animCoins[1], s->animDelta[1], s->deltaSpeed[1], (Vector2){ 180 - s->animBoxOffset, 540  }, 3, s->overlayAlpha, s->animPlaceScale[1]);
+            HUDDrawCoinWidgetWithDelta("Player 4", s->table->seats[3].member, s->animPlace[3], s->animCoins[3], s->animDelta[3], s->deltaSpeed[3], (Vector2){ 1740 + s->animBoxOffset, 540 }, 1, s->overlayAlpha, s->animPlaceScale[3]);
+
             Vector2 matchLoc;
             int rt = (s->pokajanEvent.standId + 2) % 4;
             switch (s->pokajanEvent.standId) {

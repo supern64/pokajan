@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include "component_char_mini_icon.h"
 #include "../utils/text.h"
 #include "../utils/misc.h"
 
@@ -182,6 +183,95 @@ void HUDDrawPokajanLogo(int x, int y, float scale, float rotation, Color tint) {
         rotation,
         tint
     );
+}
+
+// draws the main coin widget box and its elements, takes 0, 1, 2, 3 as rotation
+void HUDDrawCoinWidget(const char* playerName, MemberSlot member, int place, int coins, Vector2 center, int rotation, int widgetAlpha, float placeScale) {
+    float rt = rotation * 90.0f;
+    float rtrad = DEG2RAD * rt;
+
+    Rectangle topStrip, bottomStrip;
+    switch (rotation) {
+        case 0:
+            topStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2, COIN_WIDGET_WIDTH, 80 };
+            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2 + 80, COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT - 80 };
+            break;
+        case 2:
+            topStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y + COIN_WIDGET_HEIGHT / 2 - 80, COIN_WIDGET_WIDTH, 80 };
+            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_WIDTH / 2, center.y - COIN_WIDGET_HEIGHT / 2 , COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT - 80 };
+            break;
+        case 1:
+            topStrip = (Rectangle){ center.x + COIN_WIDGET_HEIGHT / 2 - 80, center.y - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
+            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2, center.y - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
+            break;
+        case 3:
+            topStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2, center.y - COIN_WIDGET_WIDTH / 2, 80, COIN_WIDGET_WIDTH };
+            bottomStrip = (Rectangle){ center.x - COIN_WIDGET_HEIGHT / 2 + 80, center.y - COIN_WIDGET_WIDTH / 2, COIN_WIDGET_HEIGHT - 80, COIN_WIDGET_WIDTH };
+            break;
+        default:
+            return;
+    }
+
+    Rectangle widget = (Rectangle){ center.x, center.y, COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT };
+
+    // box
+    BeginScissorMode(bottomStrip.x, bottomStrip.y, bottomStrip.width, bottomStrip.height);
+        HUDDrawRectangleRoundedRotated(widget, 0.5f, 12, rt, OFF_WHITE_ALPHA(widgetAlpha * 0.85f));
+    EndScissorMode();
+    BeginScissorMode(topStrip.x, topStrip.y, topStrip.width, topStrip.height);
+        HUDDrawRectangleRoundedRotated(widget, 0.5f, 12, rt, OFF_WHITE_ALPHA(widgetAlpha));
+    EndScissorMode();
+
+    // miniicon
+    Vector2 ic = Vector2Add(center, Vector2Rotate((Vector2){ 120, -70 }, rtrad));
+    CharMiniIconDrawRaw(member.generation, member.slot, ic.x, ic.y, 1.0f, rt, widgetAlpha);
+
+    // playername
+    Vector2 tc = Vector2Add(center, Vector2Rotate((Vector2){ 40, -70 }, rtrad));
+    Vector2 pts = MeasureTextEx(*GetMainFont(), playerName, 30.0f, 1.0f);
+    DrawTextPro(*GetMainFont(), playerName, tc, ANCHOR_6(pts.x, pts.y, 1.0), rt, 30.0f, 1.0f, ALPHA(GRAY, widgetAlpha));
+
+    // place
+    Vector2 pc = Vector2Add(center, Vector2Rotate((Vector2){ -120, 40 }, rtrad));
+    HUDDrawPlace(place, pc.x, pc.y, 0.3f * placeScale, rt, widgetAlpha);
+
+    // coin count
+    Vector2 ctc = Vector2Add(center, Vector2Rotate((Vector2){ 180, 60 }, rtrad));
+    const char* coinCount = TextFormat("%d", coins);
+    Vector2 cts = MeasureTextEx(*GetFocusFont(), coinCount, 80.0f, 1.0f);
+    DrawTextPro(*GetFocusFont(), coinCount, ctc, ANCHOR_6(cts.x, cts.y, 1.0), rt, 80.0f, 1.0f, ALPHA(GRAY, widgetAlpha));
+
+    // coin icon
+    Vector2 cc = Vector2Add(center, Vector2Rotate((Vector2){ 120 - cts.x, 35 }, rtrad));;
+    HUDDrawCoin(cc.x, cc.y, 0.25f, rt, widgetAlpha);    
+}
+
+void HUDDrawCoinWidgetOutline(Vector2 center, Color color, int rotation) {
+    HUDDrawRectangleRoundedLineRotated((Rectangle){ center.x, center.y, COIN_WIDGET_WIDTH, COIN_WIDGET_HEIGHT }, 0.5f, 12, rotation * 90.0f, 8.0f, color);
+}
+
+void HUDDrawCoinWidgetWithDelta(const char* playerName, MemberSlot member, int place, int coins, int delta, int deltaDir, Vector2 center, int rotation, int widgetAlpha, float placeScale) {
+    float rt = rotation * 90.0f;
+    float rtrad = DEG2RAD * rt;
+
+    Color outlineColor = OFF_WHITE_ALPHA(widgetAlpha);
+    if (deltaDir > 0) {
+        outlineColor = ALPHA(POKAJAN_DARK_BLUE, widgetAlpha);
+    } else if (deltaDir < 0) {
+        outlineColor = ALPHA(POKAJAN_RED, widgetAlpha);
+    }
+
+    // outline
+    HUDDrawCoinWidgetOutline(center, outlineColor, rotation);
+    HUDDrawCoinWidget(playerName, member, place, coins, center, rotation, widgetAlpha, placeScale);
+    
+    if (delta != 0) {
+        // delta
+        Vector2 dtc = Vector2Add(center, Vector2Rotate((Vector2){ 60, 5 }, rtrad));
+        const char* deltaCount = TextFormat((delta > 0) ? "+%d" : "%d", delta);
+        Vector2 dts = MeasureTextEx(*GetFocusFont(), deltaCount, 60.0f, 1.0f);
+        DrawTextPro(*GetFocusFont(), deltaCount, dtc, ANCHOR_6(dts.x, dts.y, 1.0), rt, 60.0f, 1.0f, outlineColor);
+    }
 }
 
 void HUDUnload(void) {
