@@ -136,8 +136,10 @@ set(POKAJAN_SOURCES
         src/scene/scene_title.c
         src/scene/scene_game.c
         src/scene/scene_setup.c
+        src/scene/scene_result.c
         src/scene/overlay_card_instructions.c
         src/scene/overlay_pokajan_anim.c
+        src/scene/overlay_game_end.c
         src/scene/scene_manager.c
         src/utils/text.c
         src/utils/input.c

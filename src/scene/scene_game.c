@@ -5,6 +5,7 @@
 #include "scene_manager.h"
 #include "overlay_card_instructions.h"
 #include "overlay_pokajan_anim.h"
+#include "overlay_game_end.h"
 #include "../component/component_card.h"
 #include "../component/component_hud.h"
 #include "../component/component_char_portrait.h"
@@ -15,7 +16,6 @@
 #include "../sound/sound.h"
 #include "../utils/text.h"
 #include "../utils/misc.h"
-#include "../utils/input.h"
 
 #define GEN_MAX_WIDTH 360
 
@@ -135,11 +135,12 @@ static void GameUpdate(void *self) {
 			case EVENT_POKAJAN:
 				SceneManagerPush(PokajanAnimCreate(s->table, &event));
 				break;
+			case EVENT_GAME_END:
+				SceneManagerPush(GameEndCreate(s->table));
 			default:
 				break;
 		}
 	}
-
 	
 	if (s->table->anyMismatch && s->table->state != WAIT_INITIAL_HANDS && s->lastMismatch == -1) {
 		s->lastMismatch = GetTime();

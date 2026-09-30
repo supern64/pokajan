@@ -4,8 +4,6 @@
 #include "component/component_hud.h"
 #include "scene/scene_manager.h"
 #include "scene/scene_title.h"
-#include "scene/scene_game.h"
-#include "scene/scene_setup.h"
 #include "pokajan_core/member_data.h"
 #include "utils/text.h"
 #include "utils/misc.h"
