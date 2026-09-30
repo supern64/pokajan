@@ -66,7 +66,7 @@ static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode
         return;
     }
 
-    mosquitto_publish(MosqInstance, NULL, "pokajan/hub/status", 1, "1", 1, true);
+    mosquitto_publish(mosq, NULL, "pokajan/hub/status", 1, "1", 1, true);
     
     char* subTopics[] = {
         "pokajan/stand/+/status",
@@ -77,7 +77,7 @@ static void NetworkOnConnect(struct mosquitto *mosq, void *table, int reasonCode
         "pokajan/stand/+/button"
     };
     
-    mosquitto_subscribe_multiple(MosqInstance, NULL, 6, subTopics, 2, 0, NULL);
+    mosquitto_subscribe_multiple(mosq, NULL, 6, subTopics, 2, 0, NULL);
 
     // broadcast initial game information
     BridgeRepublishState((PokajanTable*)table);
@@ -98,6 +98,8 @@ static bool NetworkReadNfcId(char* hexString, NfcId outId) {
 
 // main event handler
 static void NetworkOnMessage(struct mosquitto *mosq, void *table, const struct mosquitto_message *msg) {
+    (void)mosq;
+    
     PokajanTable* t = (PokajanTable*)table;
 
     int standId;

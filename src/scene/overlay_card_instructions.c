@@ -8,6 +8,7 @@
 #include "../component/component_card.h"
 #include "../utils/input.h"
 #include "../utils/text.h"
+#include "../utils/misc.h"
 
 typedef struct {
 	Scene base;
@@ -26,8 +27,7 @@ static void CardInstructionsUpdate(void *self) {
 static void CardInstructionsRender(void *self) {
 	CardInstructionsOverlay *s = (CardInstructionsOverlay *)self;
 	
-
-	DrawRectangle(0, 0, 1920, 1080, (Color){ 0, 0, 0, 196 }); // bg
+	DrawRectangle(0, 0, SCREEN_W, SCREEN_H, (Color){ 0, 0, 0, 196 }); // bg
 	DrawRectangleRounded((Rectangle){ 100, 200, 1720, 680 }, 0.2, 30, DARKGREEN);
 
 	DrawFocusText("Preparing Your Deck:", (Vector2){ 170, 260 }, 70, WHITE);

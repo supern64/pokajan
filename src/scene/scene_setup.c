@@ -34,6 +34,7 @@ static void SetupInit(void *self) {
 }
 
 static void SetupStart(void *self) {
+    (void)self;
     SoundSetBGMVolume(0.2f);
     SoundPlayBGM();
 }

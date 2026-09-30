@@ -104,7 +104,7 @@ static void GameDrawMismatch(const PokajanTable* table) {
 static void GameInit(void *self) {
 	GameScene *s = (GameScene *)self;
 	s->cardSpacing = 0;
-	s->lastMismatch = 0.0;
+	s->lastMismatch = -1.0;
 
 	CardLoad(s->table->game.generations);
 	SoundEnsureCharacterVoiceLoaded();
@@ -113,7 +113,7 @@ static void GameInit(void *self) {
 
 static void GameStart(void *self) {
 	GameScene *s = (GameScene *)self;
-	//SceneManagerPush(CardInstructionsCreate(s->table));
+	SceneManagerPush(CardInstructionsCreate(s->table));
 }
 
 static void GameUpdate(void *self) {
@@ -140,7 +140,8 @@ static void GameUpdate(void *self) {
 		}
 	}
 
-	if (s->table->anyMismatch && s->lastMismatch == -1) {
+	
+	if (s->table->anyMismatch && s->table->state != WAIT_INITIAL_HANDS && s->lastMismatch == -1) {
 		s->lastMismatch = GetTime();
 	} else if (!s->table->anyMismatch) {
 		s->lastMismatch = -1;
